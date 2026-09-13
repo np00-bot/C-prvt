@@ -221,14 +221,21 @@ ReopenBtn.Visible = false
 ReopenBtn.Parent = ScreenGui
 Instance.new("UICorner", ReopenBtn).CornerRadius = UDim.new(0, 25)
 
--- 5. KEY AUTHENTICATION SYSTEM
+--  KEY AUTHENTICATION SYSTEM
 
 
 
 -- loadstring loads
-local Payloads = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/Payloads"
-))()
+local success, Payloads = pcall(function()
+    return loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/Obfuscation%20test"
+    ))()
+end)
+
+if not success or type(Payloads) ~= "table" then
+    warn("Failed to load Payloads:", Payloads)
+    return
+end
 
 for _, data in ipairs(Payloads) do
     local Btn = Instance.new("TextButton")

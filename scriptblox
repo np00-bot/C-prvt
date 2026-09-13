@@ -46,6 +46,46 @@ task.spawn(function()
     end)
 end)
 
+local function Moon(Star)
+    local Cloud = {
+        a="ᴀ",b="ʙ",c="ᴄ",d="ᴅ",e="ᴇ",f="ꜰ",g="ɢ",h="ʜ",i="ɪ",j="ᴊ",k="ᴋ",l="ʟ",m="ᴍ",
+        n="ɴ",o="ᴏ",p="ᴘ",q="ǫ",r="ʀ",s="s",t="ᴛ",u="ᴜ",v="ᴠ",w="ᴡ",x="x",y="ʏ",z="ᴢ",
+        A="ᴀ",B="ʙ",C="ᴄ",D="ᴅ",E="ᴇ",F="ꜰ",G="ɢ",H="ʜ",I="ɪ",J="ᴊ",K="ᴋ",L="ʟ",M="ᴍ",
+        N="ɴ",O="ᴏ",P="ᴘ",Q="ǫ",R="ʀ",S="s",T="ᴛ",U="ᴜ",V="ᴠ",W="ᴡ",X="x",Y="ʏ",Z="ᴢ"
+    }
+
+    local Sky = ""
+
+    for Wind = 1, #Star do
+        local Rain = Star:sub(Wind, Wind)
+        Sky = Sky .. (Cloud[Rain] or Rain)
+    end
+
+    return Sky
+end
+
+task.spawn(function()
+    
+    local Ocean = ReplicatedStorage:WaitForChild("RE", 10)
+    if not Ocean then return end
+
+    local River = Ocean:WaitForChild("1RPNam1eColo1r", 10)
+    local Stone = Ocean:WaitForChild("1RPNam1eTex1t", 10)
+
+    if not River or not Stone then return end
+
+    local Mountain = Color3.new(1, 0, 0)
+    local Valley = Moon("Nothing Panel")
+    local Hill = Moon("_" .. lp.DisplayName .. "_")
+
+    pcall(function()
+        River:FireServer("PickingRPBioColor", Mountain)
+        River:FireServer("PickingRPNameColor", Mountain)
+
+        Stone:FireServer("RolePlayName", Valley)
+        Stone:FireServer("RolePlayBio", Hill)
+    end)
+end)
 
 -- dragging 
 local function MakeDraggable(guiObject, dragArea)

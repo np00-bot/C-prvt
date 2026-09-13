@@ -17,9 +17,7 @@ if targetParent:FindFirstChild(guiName) then
     targetParent[guiName]:Destroy()
 end
 
---=========================================
--- 1. BASE SYSTEM & SOUND CORE
---=========================================
+-- sound
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = guiName
 ScreenGui.ResetOnSpawn = false
@@ -32,18 +30,12 @@ ClickSound.SoundId = "rbxassetid://876939830"
 ClickSound.Volume = 1
 ClickSound.Parent = ScreenGui
 
-local IntroSound = Instance.new("Sound")
-IntroSound.SoundId = "rbxassetid://755895"
-IntroSound.Volume = 1
-IntroSound.Parent = ScreenGui
 
 local function PlayClick()
     ClickSound:Play()
 end
 
---=========================================
--- 2. BACKGROUND TASKS (CHAT & REMOTES)
---=========================================
+-- starting message in chatbox 
 task.spawn(function()
     -- Chat Message
     pcall(function()
@@ -54,32 +46,8 @@ task.spawn(function()
     end)
 end)
 
-task.spawn(function()
-    -- RP Remotes
-    pcall(function()
-        local reFolder = ReplicatedStorage:WaitForChild("RE", 10)
-        local colorRemote = reFolder:WaitForChild("1RPNam1eColo1r", 10)
-        local textRemote = reFolder:WaitForChild("1RPNam1eTex1t", 10)
-        
-        local redColor = Color3.new(1, 0, 0)
-        
-        local bioColorArgs = {"PickingRPBioColor", redColor}
-        colorRemote:FireServer(unpack(bioColorArgs))
 
-        local nameColorArgs = {"PickingRPNameColor", redColor}
-        colorRemote:FireServer(unpack(nameColorArgs))
-
-        local nameTextArgs = {"RolePlayName", "_N0Th1nG_P4n3l"}
-        textRemote:FireServer(unpack(nameTextArgs))
-
-        local bioTextArgs = {"RolePlayBio", "_" .. displayName .. "_"}
-        textRemote:FireServer(unpack(bioTextArgs))
-    end)
-end)
-
---=========================================
--- 3. CROSS-PLATFORM DRAGGING
---=========================================
+-- dragging 
 local function MakeDraggable(guiObject, dragArea)
     dragArea = dragArea or guiObject
     local dragging, dragInput, dragStart, startPos
@@ -115,9 +83,7 @@ local function MakeDraggable(guiObject, dragArea)
     end)
 end
 
---=========================================
--- 4. PROFESSIONAL DARK UI CONSTRUCTION
---=========================================
+--main ui
 -- MAIN APP WINDOW
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -126,7 +92,7 @@ MainFrame.Position = UDim2.new(0.3, 0, 0.2, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
-MainFrame.Visible = false
+MainFrame.Visible = true
 MainFrame.Parent = ScreenGui
 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
@@ -255,141 +221,18 @@ ReopenBtn.Visible = false
 ReopenBtn.Parent = ScreenGui
 Instance.new("UICorner", ReopenBtn).CornerRadius = UDim.new(0, 25)
 
---=========================================
 -- 5. KEY AUTHENTICATION SYSTEM
---=========================================
-local KeyFrame = Instance.new("Frame")
-KeyFrame.Size = UDim2.new(0, 320, 0, 240)
-KeyFrame.Position = UDim2.new(0.5, -160, 0.5, -120)
-KeyFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-KeyFrame.BorderSizePixel = 0
-KeyFrame.Visible = false
-KeyFrame.Parent = ScreenGui
-
-Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 12)
-
-local KeyCloseBtn = Instance.new("TextButton")
-KeyCloseBtn.Size = UDim2.new(0, 30, 0, 30)
-KeyCloseBtn.Position = UDim2.new(1, -35, 0, 5)
-KeyCloseBtn.BackgroundTransparency = 1
-KeyCloseBtn.Text = "X"
-KeyCloseBtn.TextColor3 = Color3.fromRGB(200, 50, 50)
-KeyCloseBtn.Font = Enum.Font.GothamBold
-KeyCloseBtn.TextSize = 18
-KeyCloseBtn.Parent = KeyFrame
-
-local EmojiLabel = Instance.new("TextLabel")
-EmojiLabel.Size = UDim2.new(0, 60, 0, 60)
-EmojiLabel.Position = UDim2.new(0.5, -30, 0, 15)
-EmojiLabel.BackgroundTransparency = 1
-EmojiLabel.Text = "☠️☠️☠️"
-EmojiLabel.TextScaled = true
-EmojiLabel.Parent = KeyFrame
-
-local KeyTitle = Instance.new("TextLabel")
-KeyTitle.Size = UDim2.new(1, 0, 0, 25)
-KeyTitle.Position = UDim2.new(0, 0, 0, 75)
-KeyTitle.BackgroundTransparency = 1
-KeyTitle.Text = "Nothing Panel Authentication"
-KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyTitle.Font = Enum.Font.GothamBold
-KeyTitle.TextSize = 18
-KeyTitle.Parent = KeyFrame
-
-local NoticeLabel = Instance.new("TextLabel")
-NoticeLabel.Size = UDim2.new(0.9, 0, 0, 45)
-NoticeLabel.Position = UDim2.new(0.05, 0, 0, 100)
-NoticeLabel.BackgroundTransparency = 1
-NoticeLabel.Text = "password- 'mob_one0' "
-NoticeLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-NoticeLabel.Font = Enum.Font.GothamSemibold
-NoticeLabel.TextSize = 13
-NoticeLabel.TextWrapped = true
-NoticeLabel.Parent = KeyFrame
-
-local KeyInput = Instance.new("TextBox")
-KeyInput.Size = UDim2.new(0.8, 0, 0, 35)
-KeyInput.Position = UDim2.new(0.1, 0, 0, 145)
-KeyInput.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyInput.PlaceholderText = "Enter Access Key..."
-KeyInput.Font = Enum.Font.Gotham
-KeyInput.TextSize = 14
-KeyInput.Text = ""
-KeyInput.Parent = KeyFrame
-Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
-
-local AccessBtn = Instance.new("TextButton")
-AccessBtn.Size = UDim2.new(0.8, 0, 0, 35)
-AccessBtn.Position = UDim2.new(0.1, 0, 0, 190)
-AccessBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
-AccessBtn.Text = "Verify Key"
-AccessBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-AccessBtn.Font = Enum.Font.GothamBold
-AccessBtn.TextSize = 16
-AccessBtn.Parent = KeyFrame
-Instance.new("UICorner", AccessBtn).CornerRadius = UDim.new(0, 6)
-
-MakeDraggable(MainFrame, Topbar)
-MakeDraggable(KeyFrame)
-MakeDraggable(ReopenBtn)
-
---=========================================
--- 6. INTRO SEQUENCE (5 SEC FADE)
---=========================================
-local IntroScreen = Instance.new("Frame")
-IntroScreen.Size = UDim2.new(1, 0, 1, 0)
-IntroScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-IntroScreen.ZIndex = 999
-IntroScreen.Parent = ScreenGui
-
-IntroSound:Play()
-task.wait(0.5)
-
-local fadeTween = TweenService:Create(IntroScreen, TweenInfo.new(1), {BackgroundTransparency = 1})
-fadeTween:Play()
-fadeTween.Completed:Wait()
-IntroScreen:Destroy()
-KeyFrame.Visible = true -- Reveal Key System after intro
-
---=========================================
--- 7. PAYLOAD BUTTON POPULATION
---=========================================
-local buttonsData = 
-{
-
-{"informationℹ️","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Information"},
-{"Protection 🛡️",{"https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Protection"}},
-    {"join players⛩️",{"https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Join%20server"}},
-
-    {"prop🎁","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Prop%20script"},
-    {"mecha🤖","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Mecha%20robot"},
-    {"avatars👤","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Avatars"},
-        {"Emotes🕺🏻","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Emotes"},
-    {"music🎵","https://pastebin.com/raw/wSqD15J9"},
-    {"rgb & house🌈","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/RGB%20%26%20House"},
-    {"secret places🗺️","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Secret%20places"},
-    {"shaders✨","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Shaders"},
-    
-    {"premium💎","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Premium"},
-    {"antibang🛡️","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Antibang"},
-    {"op bang💥","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Op%20bang"},
-    {"fake hover board🛹","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Fake%20hover%20board"},
-{ "simple hacks⚡",{
-        "https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Simple%20hacks",
-        "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
-    }
-},
-    {"spammer📢","https://raw.githubusercontent.com/Sam00-debug/Nothing-Panel-/refs/heads/main/Spammer"},
-    {"Discord ","https://raw.githubusercontent.com/Sam00-debug/Nothing-chat/refs/heads/main/Dc%20link"}
-    }
 
 
 
+-- loadstring loads
+local Payloads = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/Payloads"
+))()
 
-
-for _, data in ipairs(buttonsData) do
+for _, data in ipairs(Payloads) do
     local Btn = Instance.new("TextButton")
+
     Btn.Size = UDim2.new(1, -10, 0, 35)
     Btn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
     Btn.Text = data[1]
@@ -399,44 +242,32 @@ for _, data in ipairs(buttonsData) do
     Btn.Parent = ScrollFrame
 
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
-    
+
     Btn.MouseButton1Click:Connect(function()
-    PlayClick()
+        PlayClick()
 
-    local urls = type(data[2]) == "table" and data[2] or {data[2]}
+        local url = data[2]
 
-    for _, url in ipairs(urls) do
         task.spawn(function()
-            pcall(function()
-                loadstring(game:HttpGet(url))()
+            local success, err = pcall(function()
+                local source = game:HttpGet(url)
+                local func = loadstring(source)
+
+                if func then
+                    func()
+                end
             end)
+
+            if not success then
+                warn("Payload failed:", data[1], err)
+            end
         end)
-    end
-end)
+    end)
 end
 
---=========================================
--- 8. GLOBAL BUTTON SOUNDS & LOGIC
---=========================================
-local sysButtons = {AccessBtn, KeyCloseBtn, MinimizeBtn, ReopenBtn, CloseBtn, YesBtn, NoBtn}
-for _, btn in ipairs(sysButtons) do
-    btn.MouseButton1Click:Connect(PlayClick)
-end
+-- button logic 
 
-AccessBtn.MouseButton1Click:Connect(function()
-    if KeyInput.Text:lower():match("^%s*(.-)%s*$") == "mob_one0" then
-        KeyFrame.Visible = false
-        MainFrame.Visible = true
-    else
-        AccessBtn.Text = "Invalid Key!"
-        AccessBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-        task.wait(1.5)
-        AccessBtn.Text = "Verify Key"
-        AccessBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
-    end
-end)
 
-KeyCloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
 MinimizeBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false

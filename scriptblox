@@ -144,7 +144,7 @@ Topbar.Size = UDim2.new(1, 0, 0, 35)
 Topbar.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
 Topbar.BorderSizePixel = 0
 Topbar.Parent = MainFrame
-
+MakeDraggable(MainFrame, TopBar)
 Instance.new("UICorner", Topbar).CornerRadius = UDim.new(0, 8)
 
 local Title = Instance.new("TextLabel")
@@ -261,7 +261,7 @@ ReopenBtn.Font = Enum.Font.GothamBold
 ReopenBtn.Visible = false
 ReopenBtn.Parent = ScreenGui
 Instance.new("UICorner", ReopenBtn).CornerRadius = UDim.new(0, 25)
-
+MakeDraggable(ReopenBtn, ReopenBtn)
 --  KEY AUTHENTICATION SYSTEM
 
 

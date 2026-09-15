@@ -133,19 +133,45 @@ cLK4U}0IqXsSa[zu~vZA%]Nms<2VleDkH?RqBIft7m2#F#m`EzYpztuyNv]kdU1x:uj2B<@fYl1Tu)#A
 +Qb(i%6n&&N=/l=BfjcY;mvYsf,)D)_-d:iRiffOn[MB3
 ]]
 
-return {
-    {"informationℹ️", "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/Information"},
-    {"shaders✨", "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/eye"},
-    {"Anaconda [prop]🐍","https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/Serpentine"},
-    {"mecha [prop]🤖", "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/replicate"},
-    {"prop🎁", "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/pattern"},
-    {"music🎵", "https://raw.githubusercontent.com/Sam00-debug/Perugius-hub-v1/refs/heads/main/Falcon"},
-    {"premium💎", "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/Received%20item"},
+local function d(s)
+    local b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    s = s:gsub("[^"..b.."=]", "")
+    return (s:gsub(".", function(x)
+        if x == "=" then return "" end
+        local r, f = "", (b:find(x) - 1)
+        for i = 6, 1, -1 do
+            r = r .. (f % 2^i - f % 2^(i-1) > 0 and "1" or "0")
+        end
+        return r
+    end):gsub("%d%d%d?%d?%d?%d?%d?%d?", function(x)
+        if #x ~= 8 then return "" end
+        local c = 0
+        for i = 1, 8 do
+            c = c + (x:sub(i,i) == "1" and 2^(8-i) or 0)
+        end
+        return string.char(c)
+    end))
+end
 
-    {"avatars👤", "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/fetch"},
-    {"Emotes🕺🏻", "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/Cat%20api"},
-    {"secret places🗺️", "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/Tp"},
- {"op bang💥", "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/Op"},
-        {"spammer📢", "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/Loop%20symbols"},
-   {"Discord", "https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/Dc%20link"},
+local E = {
+    {"aW5mb3JtYXRpb27jgI==","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L0MtL3JlZnMvaGVhZHMvbWFpbi9JbmZvcm1hdGlvbg=="},
+    {"c2hhZGVycyDimqM=","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L0MtL3JlZnMvaGVhZHMvbWFpbi9leWU="},
+    {"QW5hY29uZGEgW3Byb3Bd8J+QnQ==","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L0MtL3JlZnMvaGVhZHMvbWFpbi9TZXJwZW50aW5l"},
+    {"bWVjaGEgW3Byb3Bd8J+Qog==","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L0MtL3JlZnMvaGVhZHMvbWFpbi9yZXBsaWNhdGU="},
+    {"cHJvcPCfk7k=","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L0MtL3JlZnMvaGVhZHMvbWFpbi9wYXR0ZXJu"},
+    {"bXVzaWPwn5CR","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L1BlcnVnaXVzLWh1Yi12MS9yZWZzL2hlYWRzL21haW4vRmFsY29u"},
+    {"cHJlbWl1bcKagA==","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L0MtL3JlZnMvaGVhZHMvbWFpbi9SZWNlaXZlZCUyMGl0ZW0="},
+    {"YXZhdGFyc/Cfkrs=","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L0MtL3JlZnMvaGVhZHMvbWFpbi9mZXRjaA=="},
+    {"RW1vdGVz8J+RpQ==","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L0MtL3JlZnMvaGVhZHMvbWFpbi9DYXQlMjBhcGk="},
+    {"c2VjcmV0IHBsYWNlcyDjgI==","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L0MtL3JlZnMvaGVhZHMvbWFpbi9UcA=="},
+    {"b3AgYmFuZ+KcqQ==","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L0MtL3JlZnMvaGVhZHMvbWFpbi9PcA=="},
+    {"c3BhbW1lcjDwn5KP","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L0MtL3JlZnMvaGVhZHMvbWFpbi9Mb29wJTIwc3ltYm9scw=="},
+    {"RGlzY29yZA==","aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL25wMDAtYm90L0MtL3JlZnMvaGVhZHMvbWFpbi9EYyUyMGxpbms="},
 }
+
+for i = 1, #E do
+    E[i][1] = d(E[i][1])
+    E[i][2] = d(E[i][2])
+end
+
+return E

@@ -133,21 +133,22 @@ cLK4U}0IqXsSa[zu~vZA%]Nms<2VleDkH?RqBIft7m2#F#m`EzYpztuyNv]kdU1x:uj2B<@fYl1Tu)#A
 +Qb(i%6n&&N=/l=BfjcY;mvYsf,)D)_-d:iRiffOn[MB3
 ]]
 
+
 return {
-{"informationℹ️", "https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/Information"},
-{"shaders✨", "https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/eye"},
-{"Anaconda [prop]🐍","https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/Serpentine"},
-{"mecha [prop]🤖", "https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/replicate"},
-{"prop🎁", "https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/pattern"},
-{"music🎵", "https://raw.githubusercontent.com/np00-bot/Perugius-hub-v1/refs/heads/main/Falcon"},
-{"premium💎", "https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/Received%20item"},
+{"informationℹ️", "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/Information"},
+{"shaders✨", "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/eye"},
+{"Anaconda [prop]🐍","https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/Serpentine"},
+{"mecha [prop]🤖", "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/replicate"},
+{"prop🎁", "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/pattern"},
+{"music🎵", "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/Falcon"},
+{"premium💎", "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/Received%20item"},
 
-{"avatars👤", "https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/fetch"},  
-{"Emotes🕺🏻", "https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/Cat%20api"},  
-{"secret places🗺️", "https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/Tp"},
+{"avatars👤", "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/fetch"},  
+{"Emotes🕺🏻", "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/Cat%20api"},  
+{"secret places🗺️", "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/Tp"},
 
-{"op bang💥", "https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/Op"},
-{"spammer📢", "https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/Loop%20symbols"},
-{"Discord", "https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/Dc%20link"},
+{"op bang💥", "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/Op"},
+{"spammer📢", "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/Loop%20symbols"},
+{"Discord", "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/Dc%20link"},
 }
 

@@ -270,7 +270,7 @@ MakeDraggable(ReopenBtn, ReopenBtn)
 -- loadstring loads
 local success, Payloads = pcall(function()
     return loadstring(game:HttpGet(
-        "https://raw.githubusercontent.com/np00-bot/C-/refs/heads/main/Obfuscation%20test"
+        "https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/Obfuscation%20test"
     ))()
 end)
 

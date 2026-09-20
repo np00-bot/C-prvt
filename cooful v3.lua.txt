@@ -1,4 +1,3 @@
--- This file was generated at discord.gg/syncrypt
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -15,7 +14,7 @@ local function v7(p1)
 end
 local color3 = Color3.fromRGB(145, 90, 255)
 local t1 = {
-	Enabled = true,
+	Enabled = LocalPlayer.Name == "c00lful",
 	Title = "PROP HUB V3",
 	Subtitle = "Key required",
 	DiscordLink = "https://discord.gg/jFJQj22gjt",
@@ -1076,6 +1075,3 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         TextButton2.Visible = not ScreenGui.Enabled
     end
 end)
-print("Prop Hub V3 Loaded Successfully! (30 Buttons - 6x5 Grid)")
-print("Press Right Shift to toggle GUI")
-print("Button 30 copies Discord link to clipboard!")

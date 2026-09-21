@@ -660,18 +660,18 @@ end)
 
 task.spawn(function()
     while task.wait(350) do 
-        displayMessage("System", "\n1) !e = emojis\n2) !p = private chat \n3) !i = invite users \n4) !cmds = all commands") 
+        displayMessage("System", "\n1) !emoji = emojis\n2) !private = private chat \n3) !join = join users \n4) !cmds = all commands") 
     end
 end)
 
 task.spawn(function()
     while task.wait(200) do 
-        displayMessage("dc bot", "join DISCORD = 'VIP' title chat🌟") 
+        displayMessage("dc bot", "join DISCORD = epic features 🌟") 
     end
 end)
 
 local messages = {  
-    {"miku", " type !invite"},
+    {"miku", " type !join"},
     {"cutie", "type !private"},
     {"Sakura", " type ;fly , ;invisible , ;speed 200 , ;tp (player)"},
     {"daddy", "what will you do if script delets , better JOIN DISCORD 👺❤️"}

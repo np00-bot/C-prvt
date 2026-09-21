@@ -594,111 +594,250 @@ local function sendInvite(target)
     end)
 end
 
-local function getJoinedUsers()
+-- ==========================================
+-- RECENT MESSAGE PLAYERS
+-- ==========================================
+
+local function getRecentMessagePlayers()
     local success, res = pcall(function()
         return req({
             Url = SERVER_URL .. "/messages?since=0",
             Method = "GET",
-            Headers = { ["User-Agent"] = "Roblox/WinInet" }
+            Headers = {
+                ["User-Agent"] = "Roblox/WinInet"
+            }
         })
     end)
 
-    if not success or not res or res.StatusCode ~= 200 then return {} end
+    if not success or not res or res.StatusCode ~= 200 then
+        return {}
+    end
 
-    local ok, data = pcall(function() return HttpService:JSONDecode(res.Body) end)
-    if not ok or type(data) ~= "table" then return {} end
+    local ok, data = pcall(function()
+        return HttpService:JSONDecode(res.Body)
+    end)
 
-    local users, seen = {}, {}
-    for _, m in ipairs(data) do
-        if m.hidden and m.msg == "Joined" then
-            local key = string.lower(m.user)
-            if not seen[key] and key ~= string.lower(LocalPlayer.Name) then
+    if not ok or type(data) ~= "table" then
+        return {}
+    end
+
+    -- Get the last 15 messages
+    local startIndex = math.max(1, #data - 14)
+
+    local users = {}
+    local seen = {}
+
+    -- Iterate newest -> oldest.
+    -- This means if someone appears multiple times,
+    -- their newest message/jobId is the one we keep.
+    for i = #data, startIndex, -1 do
+        local m = data[i]
+
+        if type(m) == "table"
+            and m.user
+            and m.user ~= ""
+            and not m.hidden
+        then
+            local username = tostring(m.user)
+            local key = string.lower(username)
+
+            -- Don't show yourself
+            if key ~= string.lower(LocalPlayer.Name)
+                and not seen[key]
+            then
                 seen[key] = true
+
                 table.insert(users, {
-                    user = m.user,
-                    displayName = m.displayName or m.user,
-                    jobId = m.jobId
+                    user = username,
+                    displayName = tostring(m.displayName or username),
+                    jobId = tostring(m.jobId or ""),
+                    time = tonumber(m.time) or 0
                 })
             end
         end
     end
+
     return users
 end
 
+
+-- ==========================================
+-- PLAYER SELECT UI
+-- ==========================================
+
 local function openPlayerSelectUI(mode)
     mode = mode or "private"
+
     if ScreenGui:FindFirstChild("PlayerSelectFrame") then
         ScreenGui.PlayerSelectFrame:Destroy()
     end
 
-    local pFrame = Instance.new("Frame", ScreenGui)
+    local pFrame = Instance.new("Frame")
     pFrame.Name = "PlayerSelectFrame"
-    pFrame.Size = UDim2.new(0, 300, 0, 300)
-    pFrame.Position = UDim2.new(0.5, -150, 0.5, -150)
-    pFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    pFrame.Parent = ScreenGui
+    pFrame.Size = UDim2.new(0, 300, 0, 330)
+    pFrame.Position = UDim2.new(0.5, -150, 0.5, -165)
+    pFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 17)
     pFrame.Active = true
 
     local corner = Instance.new("UICorner", pFrame)
     corner.CornerRadius = UDim.new(0, 8)
 
+    local stroke = Instance.new("UIStroke", pFrame)
+    stroke.Color = Color3.fromRGB(45, 45, 50)
+    stroke.Thickness = 1
+
+    -- Title
     local title = Instance.new("TextLabel", pFrame)
-    title.Size = UDim2.new(1, -50, 0, 40)
+    title.Size = UDim2.new(1, -55, 0, 42)
     title.Position = UDim2.new(0, 15, 0, 0)
     title.BackgroundTransparency = 1
-    title.Text = (mode == "private") and "Select Player to Private Chat" or "Select Player to Invite"
+    title.Text = (mode == "private")
+        and "Select Player to Private Chat"
+        or "Invite Player"
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
     title.Font = Enum.Font.GothamBold
-    title.TextSize = 16
+    title.TextSize = 15
     title.TextXAlignment = Enum.TextXAlignment.Left
 
+    -- Close
     local closeBtn = Instance.new("TextButton", pFrame)
     closeBtn.Size = UDim2.new(0, 40, 0, 40)
     closeBtn.Position = UDim2.new(1, -40, 0, 0)
     closeBtn.BackgroundTransparency = 1
-    closeBtn.Text = "X"
-    closeBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    closeBtn.Text = "×"
+    closeBtn.TextColor3 = Color3.fromRGB(235, 64, 52)
     closeBtn.Font = Enum.Font.GothamBold
-    closeBtn.TextSize = 18
-    closeBtn.MouseButton1Click:Connect(function() pFrame:Destroy() end)
+    closeBtn.TextSize = 22
 
+    closeBtn.MouseButton1Click:Connect(function()
+        pFrame:Destroy()
+    end)
+
+    -- Scroll
     local scroll = Instance.new("ScrollingFrame", pFrame)
-    scroll.Size = UDim2.new(1, -20, 1, -50)
-    scroll.Position = UDim2.new(0, 10, 0, 40)
+    scroll.Size = UDim2.new(1, -20, 1, -55)
+    scroll.Position = UDim2.new(0, 10, 0, 48)
     scroll.BackgroundTransparency = 1
-    scroll.ScrollBarThickness = 6
-    
+    scroll.BorderSizePixel = 0
+    scroll.ScrollBarThickness = 4
+    scroll.ScrollBarImageTransparency = 0.25
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+    local padding = Instance.new("UIPadding", scroll)
+    padding.PaddingBottom = UDim.new(0, 5)
+
     local layout = Instance.new("UIListLayout", scroll)
-    layout.Padding = UDim.new(0, 5)
+    layout.Padding = UDim.new(0, 6)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    local count = 0
-    local scriptUsers = getJoinedUsers()
+    -- Get players from the last 15 messages
+    local recentPlayers = getRecentMessagePlayers()
 
-    for _, data in ipairs(scriptUsers) do
+    for index, data in ipairs(recentPlayers) do
+
         local pBtn = Instance.new("TextButton", scroll)
-        pBtn.Size = UDim2.new(1, -10, 0, 35)
-        pBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        pBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        pBtn.Font = Enum.Font.GothamMedium
-        pBtn.TextSize = 14
-        pBtn.Text = "   " .. data.displayName .. " (@" .. data.user .. ")"
-        pBtn.TextXAlignment = Enum.TextXAlignment.Left
+        pBtn.Name = "Player_" .. data.user
+        pBtn.Size = UDim2.new(1, -5, 0, 52)
+        pBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 28)
+        pBtn.AutoButtonColor = true
+        pBtn.Text = ""
+        pBtn.LayoutOrder = index
 
         local btnCorner = Instance.new("UICorner", pBtn)
-        btnCorner.CornerRadius = UDim.new(0, 4)
+        btnCorner.CornerRadius = UDim.new(0, 6)
 
+        local btnStroke = Instance.new("UIStroke", pBtn)
+        btnStroke.Color = Color3.fromRGB(40, 40, 45)
+        btnStroke.Thickness = 1
+
+        -- Display name
+        local displayLabel = Instance.new("TextLabel", pBtn)
+        displayLabel.Size = UDim2.new(1, -20, 0, 25)
+        displayLabel.Position = UDim2.new(0, 10, 0, 3)
+        displayLabel.BackgroundTransparency = 1
+        displayLabel.Text = data.displayName
+        displayLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        displayLabel.Font = Enum.Font.GothamMedium
+        displayLabel.TextSize = 14
+        displayLabel.TextXAlignment = Enum.TextXAlignment.Left
+        displayLabel.TextTruncate = Enum.TextTruncate.AtEnd
+
+        -- Username
+        local usernameLabel = Instance.new("TextLabel", pBtn)
+        usernameLabel.Size = UDim2.new(1, -20, 0, 20)
+        usernameLabel.Position = UDim2.new(0, 10, 0, 27)
+        usernameLabel.BackgroundTransparency = 1
+        usernameLabel.Text = "@" .. data.user
+        usernameLabel.TextColor3 = Color3.fromRGB(130, 130, 135)
+        usernameLabel.Font = Enum.Font.Gotham
+        usernameLabel.TextSize = 11
+        usernameLabel.TextXAlignment = Enum.TextXAlignment.Left
+        usernameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+
+        -- Click player
         pBtn.MouseButton1Click:Connect(function()
-            if mode == "private" then
-                setPrivateTarget(data.user)
-            elseif mode == "invite" then
-                sendInvite(data.user)
-            end
-            pFrame:Destroy()
-        end)
 
-        count = count + 1
+            if mode == "private" then
+
+                setPrivateTarget(data.user)
+                pFrame:Destroy()
+
+            elseif mode == "invite" then
+
+                if data.jobId == "" then
+                    displayMessage(
+                        "System",
+                        "No server ID available for @" .. data.user,
+                        nil,
+                        false
+                    )
+                    return
+                end
+
+                -- Join selected player's server
+                pBtn.Text = "Joining..."
+
+                task.spawn(function()
+                    local success, err = pcall(function()
+                        TeleportService:TeleportToPlaceInstance(
+                            game.PlaceId,
+                            data.jobId,
+                            LocalPlayer
+                        )
+                    end)
+
+                    if not success then
+                        warn("Teleport failed:", err)
+
+                        if pFrame and pFrame.Parent then
+                            pFrame:Destroy()
+                        end
+
+                        displayMessage(
+                            "System",
+                            "Failed to join @" .. data.user .. "'s server.",
+                            nil,
+                            false
+                        )
+                    end
+                end)
+
+            end
+        end)
     end
-    scroll.CanvasSize = UDim2.new(0, 0, 0, count * 40)
+
+    -- Empty state
+    if #recentPlayers == 0 then
+        local empty = Instance.new("TextLabel", scroll)
+        empty.Size = UDim2.new(1, 0, 0, 50)
+        empty.BackgroundTransparency = 1
+        empty.Text = "No recent players found."
+        empty.TextColor3 = Color3.fromRGB(130, 130, 135)
+        empty.Font = Enum.Font.Gotham
+        empty.TextSize = 13
+    end
 end
 
 local function displayBubble(userName, msg)

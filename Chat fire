@@ -10,8 +10,40 @@ local LocalPlayer = Players.LocalPlayer
 local req = request or http_request or (syn and syn.request)
 if not req then warn("Your executor does not support HTTP requests.") return end
 
+
+
 -- [ CONFIGURATION ]
-local FIREBASE_URL = "https://roblox-chat-112d0-default-rtdb.firebaseio.com" -- Replace with your Firebase URL
+local FIREBASE_URL = "" -- Replace with your Firebase URL
+
+local FIREBASE_1 = "https://roblox-chat-112d0-default-rtdb.firebaseio.com"
+local FIREBASE_2 = "https://roblox-chat-2-default-rtdb.firebaseio.com"
+
+local function getFirebaseURL()
+    local day = tonumber(os.date("!%d"))
+    return day <= 15 and FIREBASE_1 or FIREBASE_2
+end
+
+local function apiReq(path, method, body)
+    local baseUrl = getFirebaseURL()
+
+    local ok, res = pcall(req, {
+        Url = baseUrl .. path,
+        Method = method or "GET",
+        Headers = {
+            ["Content-Type"] = "application/json",
+            ["User-Agent"] = "Roblox/WinInet"
+        },
+        Body = body and HttpService:JSONEncode(body) or nil
+    })
+
+    if ok and res and res.StatusCode == 200 and res.Body ~= "null" then
+        local valid, data = pcall(HttpService.JSONDecode, HttpService, res.Body)
+        return valid and data or nil
+    end
+
+    return nil
+end
+
 local ACTIVE_POLL_RATE = 1
 local IDLE_POLL_RATE = 5
 local IDLE_AFTER = 60

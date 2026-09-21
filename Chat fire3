@@ -22,8 +22,17 @@ end
 
 -- [ CONFIGURATION ]
 local CONFIG = {
-    FirebaseUrl = "https://roblox-chat-112d0-default-rtdb.firebaseio.com",
-    ActivePollRate = 1,
+    local FIREBASE_DATABASES = {
+    "https://roblox-chat-112d0-default-rtdb.firebaseio.com/",
+    "https://roblox-chat-2-default-rtdb.firebaseio.com/"
+}
+
+local day = tonumber(os.date("%d"))
+
+local firebase_url = FIREBASE_DATABASES[
+    day <= 15 and 1 or 2
+]
+ActivePollRate = 1,
     IdlePollRate = 5,
     IdleAfter = 60,
     MaxMessageFetch = 50

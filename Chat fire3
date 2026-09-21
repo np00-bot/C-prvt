@@ -29,7 +29,7 @@ local CONFIG = {
 
 local day = tonumber(os.date("%d"))
 
-local firebase_url = FIREBASE_DATABASES[
+local FirebaseUrl = FIREBASE_DATABASES[
     day <= 15 and 1 or 2
 ]
 ActivePollRate = 1,

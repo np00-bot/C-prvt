@@ -494,7 +494,10 @@ local function pollMessages()
             
             -- Tier 2: Fetch missing messages for the partition
             local today = os.date("!%Y-%m-%d", os.time())
-            local queryUrl = "/chat/" .. today .. ".json?orderBy=%22t%22&startAt=" .. (lastSyncTime + 1)
+            local queryUrl = "/chat/" .. today ..
+    ".json?orderBy=%22t%22&startAt=" ..
+    (lastSyncTime + 1) ..
+    "&limitToFirst=50"
             local data = apiReq(queryUrl, "GET")
 
             if data and type(data) == "table" then

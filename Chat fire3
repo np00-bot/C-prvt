@@ -427,10 +427,22 @@ local function setPrivateTarget(username)
 end
 PrivateBtn.MouseButton1Click:Connect(function() setPrivateTarget(nil) end)
 
+local function escapeRichText(text)
+    text = tostring(text or "")
+    text = text:gsub("&", "&amp;")
+    text = text:gsub("<", "&lt;")
+    text = text:gsub(">", "&gt;")
+    text = text:gsub('"', "&quot;")
+    text = text:gsub("'", "&apos;")
+    return text
+end
+
 local function displayMessage(userName, msg, privateUserTarget, isPrivateSender, receivedDisplayName)
     local speaker = Players:FindFirstChild(userName)
     local displayName = receivedDisplayName or (speaker and speaker.DisplayName) or userName
     local lowerUser = userName:lower()
+
+
 
     local rtsTag, legacyTag = "", ""
     -- Fix for glowing owner tags using <stroke> natively for TextChatService
@@ -451,6 +463,7 @@ local function displayMessage(userName, msg, privateUserTarget, isPrivateSender,
         legacyTag = "[VIP] "
     end
 
+local safeDisplayName = escapeRichText(displayName)
     local msgColor, color3Msg = "#FFFF00", Color3.fromRGB(255, 255, 0)
     local rtsTagText = "💬 " .. rtsTag .. displayName .. ":"
     local legacyTagText = "💬 " .. legacyTag .. displayName .. ":"

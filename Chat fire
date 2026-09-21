@@ -10,10 +10,27 @@ local LocalPlayer = Players.LocalPlayer
 local req = request or http_request or (syn and syn.request)
 if not req then warn("Your executor does not support HTTP requests.") return end
 
-local FIREBASE_URL = "https://roblox-chat-112d0-default-rtdb.firebaseio.com"
-local lastSyncTime, isPolling, chatMode, privateTarget = 0, true, "global", nil
-local processedMsgIds = {}
+-- [ CONFIGURATION ]
+local FIREBASE_URL = "https://YOUR-PROJECT-ID-default-rtdb.firebaseio.com" -- Replace with your Firebase URL
+local BASE_POLL_RATE = 2     -- Minimum poll interval (seconds)
+local MAX_POLL_RATE = 8      -- Maximum poll backoff when idle
+local POLL_BACKOFF = 0.5     -- Backoff increment per empty check
+
+-- [ STATE ]
+local lastSyncTime, isPolling, chatMode, privateTarget, knownUsers = 0, true, "global", nil, {}
+local currentPollRate = BASE_POLL_RATE
 local Connections, OriginalTransparencies = {}, {}
+
+-- [ HELPER: Unique Push ID Generator ]
+local function generatePushID()
+    local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+    local id = ""
+    for i = 1, 20 do
+        local r = math.random(1, #chars)
+        id = id .. string.sub(chars, r, r)
+    end
+    return id
+end
 
 local function create(class, props)
     local inst = Instance.new(class)
@@ -22,35 +39,42 @@ local function create(class, props)
 end
 
 local function apiReq(path, method, body)
-    local url = FIREBASE_URL .. path .. ".json"
     local ok, res = pcall(req, {
-        Url = url,
+        Url = FIREBASE_URL .. path,
         Method = method or "GET",
-        Headers = { ["Content-Type"] = "application/json" },
+        Headers = { ["Content-Type"] = "application/json", ["User-Agent"] = "Roblox/WinInet" },
         Body = body and HttpService:JSONEncode(body) or nil
     })
-    if ok and res and (res.StatusCode == 200 or res.StatusCode == 204) then
-        if not res.Body or res.Body == "null" or res.Body == "" then return nil end
+    if ok and res and res.StatusCode == 200 and res.Body ~= "null" then
         local valid, data = pcall(HttpService.JSONDecode, HttpService, res.Body)
         return valid and data or nil
     end
     return nil
 end
 
-local function parseFirebaseData(data)
-    local list = {}
-    if type(data) == "table" then
-        for key, item in pairs(data) do
-            if type(item) == "table" then
-                item._id = key
-                table.insert(list, item)
-            end
-        end
-        table.sort(list, function(a, b)
-            return (tonumber(a.time) or 0) < (tonumber(b.time) or 0)
-        end)
-    end
-    return list
+local function sendFirebaseMessage(msgText, isPrivate, targetUser, isHidden)
+    local currentTime = os.time()
+    local today = os.date("!%Y-%m-%d", currentTime)
+    local yesterday = os.date("!%Y-%m-%d", currentTime - 86400)
+    
+    local pushID = generatePushID()
+    local payload = {
+        ["chat/" .. today .. "/" .. pushID] = {
+            u = LocalPlayer.Name,
+            d = LocalPlayer.DisplayName,
+            m = msgText,
+            t = currentTime,
+            j = game.JobId,
+            p = targetUser or nil,
+            h = isHidden or nil
+        },
+        ["sync"] = currentTime
+    }
+
+    task.spawn(function()
+        apiReq("/.json", "PATCH", payload)
+        apiReq("/chat/" .. yesterday .. ".json", "DELETE")
+    end)
 end
 
 local function toLowerKeys(tbl)
@@ -178,7 +202,7 @@ local CommandList = {
         if hrp then
             if hrp:FindFirstChild("AdminSpin") then hrp.AdminSpin:Destroy() end
             if state ~= false then
-                create("BodyAngularVelocity", { Name = "AdminSpin", AngularVelocity = Vector3.new(0, 20, 0), MaxTorque = Vector3.new(0, math.huge, 0), Parent = hrp })
+                local spin = create("BodyAngularVelocity", { Name = "AdminSpin", AngularVelocity = Vector3.new(0, 20, 0), MaxTorque = Vector3.new(0, math.huge, 0), Parent = hrp })
             end
         end
     end,
@@ -322,35 +346,24 @@ local function checkMention(msg)
     end
 end
 
-local function updatePresence()
-    apiReq("/users/" .. LocalPlayer.Name:lower(), "PUT", {
-        user = LocalPlayer.Name,
-        displayName = LocalPlayer.DisplayName,
-        jobId = game.JobId,
-        lastSeen = os.time()
-    })
-end
-
 local function getRecentMessagePlayers()
-    local rawUsers = apiReq('/users?orderBy="lastSeen"&limitToLast=20')
-    local userList = parseFirebaseData(rawUsers)
-    
+    local today = os.date("!%Y-%m-%d", os.time())
+    local data = apiReq("/chat/" .. today .. ".json?orderBy=%22t%22&limitToLast=30", "GET")
+    if not data or type(data) ~= "table" then return {} end
+
+    local list = {}
+    for _, msg in pairs(data) do table.insert(list, msg) end
+    table.sort(list, function(a, b) return (tonumber(a.t) or 0) > (tonumber(b.t) or 0) end)
+
     local users, seen = {}, {}
-    for i = #userList, 1, -1 do
-        local u = userList[i]
-        if u.user and u.user ~= "" then
-            local key = string.lower(u.user)
+    for _, m in ipairs(list) do
+        if type(m) == "table" and m.u and m.u ~= "" and not m.h then
+            local key = string.lower(m.u)
             if key ~= string.lower(LocalPlayer.Name) and not seen[key] then
                 seen[key] = true
-                table.insert(users, {
-                    user = tostring(u.user),
-                    displayName = tostring(u.displayName or u.user),
-                    jobId = tostring(u.jobId or ""),
-                    time = tonumber(u.lastSeen) or 0
-                })
+                table.insert(users, { user = tostring(m.u), displayName = tostring(m.d or m.u), jobId = tostring(m.j or ""), time = tonumber(m.t) or 0 })
             end
         end
-        if #users >= 15 then break end
     end
     return users
 end
@@ -448,31 +461,8 @@ local function sendPrivateMessage()
     TextBox.PlaceholderText = " Sending..."
 
     task.spawn(function()
-        local msgPayload = {
-            user = LocalPlayer.Name,
-            displayName = LocalPlayer.DisplayName,
-            msg = finalMsg,
-            jobId = game.JobId,
-            time = os.time(),
-            private = privateTarget ~= nil
-        }
-
-        local res = nil
-        if privateTarget then
-            local senderPath = "/private/messages/" .. LocalPlayer.Name:lower()
-            local targetPath = "/private/messages/" .. privateTarget:lower()
-            res = apiReq(senderPath, "POST", msgPayload)
-            apiReq(targetPath, "POST", msgPayload)
-        elseif chatMode == "server" then
-            res = apiReq("/servers/" .. game.JobId .. "/messages", "POST", msgPayload)
-        else
-            res = apiReq("/global/messages", "POST", msgPayload)
-        end
-
-        updatePresence()
-
-        TextBox.PlaceholderText = res and " press ; to type.." or " Failed! Server offline?"
-        if not res then task.wait(2) TextBox.PlaceholderText = " press ; to type.." end
+        sendFirebaseMessage(finalMsg, privateTarget ~= nil, privateTarget, false)
+        TextBox.PlaceholderText = " press ; to type.."
     end)
 end
 
@@ -489,94 +479,78 @@ TextBox:GetPropertyChangedSignal("Text"):Connect(function()
     end
 end)
 
--- Message Processing Handler
-local function processSingleMessage(m)
-    if not m or type(m) ~= "table" then return end
-    local msgId = m._id or (m.user .. "_" .. tostring(m.time))
-    if processedMsgIds[msgId] then return end
-    processedMsgIds[msgId] = true
-
-    if m.time and tonumber(m.time) > lastSyncTime then
-        lastSyncTime = tonumber(m.time)
-    end
-
-    local invSender, invTarget, invJobId = string.match(m.msg, "^%( 💌 ([%w_]+) Invite ([%w_]+)%) (.+)$")
-    if invSender and invTarget and invJobId then
-        if invTarget:lower() == LocalPlayer.Name:lower() and invJobId ~= game.JobId then showInviteUI(invSender, invJobId) end
-        return
-    end
-
-    if m.hidden then
-        if m.msg == "Joined" and m.user:lower() ~= LocalPlayer.Name:lower() then
-            displayMessage(m.user, (m.displayName or m.user) .. " joined the chat.", nil, false, m.displayName)
-        end
-        return
-    end
-
-    if chatMode == "server" and m.jobId ~= game.JobId then return end
-
-    local pSender, pTarget, pMsg = string.match(m.msg, "^%( 🔐 ([%w_]+) Private ([%w_]+)%) (.*)$")
-    if pSender and pTarget then
-        if LocalPlayer.Name == pSender then 
-            displayMessage(m.user, pMsg, pTarget, true) 
-            displayBubble(m.user, pMsg)
-        elseif LocalPlayer.Name == pTarget then 
-            displayMessage(m.user, pMsg, pSender, false) 
-            displayBubble(m.user, pMsg) 
-        end
-        return
-    end
-
-    checkMention(m.msg)
-    displayMessage(m.user, m.msg, nil, false, m.displayName)
-    displayBubble(m.user, m.msg)
-end
-
--- Polling Loop
+-- Two-Tier Adaptive Polling Loop
 local function pollMessages()
     while isPolling do
-        task.wait(2)
+        task.wait(currentPollRate)
         
-        -- 1. Global / Public Messages
-        local path = (chatMode == "server") and ("/servers/" .. game.JobId .. "/messages") or "/global/messages"
-        local rawData = apiReq(path .. '?orderBy="$key"&limitToLast=15')
-        local messages = parseFirebaseData(rawData)
-        for _, m in ipairs(messages) do
-            processSingleMessage(m)
-        end
+        -- Tier 1: Check 10-byte global sync timestamp
+        local syncRes = apiReq("/sync.json", "GET")
+        local globalSync = tonumber(syncRes)
 
-        -- 2. Private Inbox Messages
-        local rawPrivate = apiReq('/private/messages/' .. LocalPlayer.Name:lower() .. '?orderBy="$key"&limitToLast=10')
-        local privateMsgs = parseFirebaseData(rawPrivate)
-        for _, m in ipairs(privateMsgs) do
-            processSingleMessage(m)
+        if globalSync and globalSync > lastSyncTime then
+            -- Snap poll rate back to minimum delay when active
+            currentPollRate = BASE_POLL_RATE
+            
+            -- Tier 2: Fetch missing messages for the partition
+            local today = os.date("!%Y-%m-%d", os.time())
+            local queryUrl = "/chat/" .. today .. ".json?orderBy=%22t%22&startAt=" .. (lastSyncTime + 1)
+            local data = apiReq(queryUrl, "GET")
+
+            if data and type(data) == "table" then
+                local newMessages = {}
+                for _, msgData in pairs(data) do table.insert(newMessages, msgData) end
+                table.sort(newMessages, function(a, b) return (tonumber(a.t) or 0) < (tonumber(b.t) or 0) end)
+
+                for _, m in ipairs(newMessages) do
+                    local msgTime = tonumber(m.t) or 0
+                    if msgTime > lastSyncTime then
+                        lastSyncTime = msgTime
+                        knownUsers[m.u:lower()] = m.u
+
+                        -- Invite handler
+                        local invSender, invTarget, invJobId = string.match(m.m, "^%( 💌 ([%w_]+) Invite ([%w_]+)%) (.+)$")
+                        if invSender and invTarget and invJobId then
+                            if invTarget:lower() == LocalPlayer.Name:lower() and invJobId ~= game.JobId then showInviteUI(invSender, invJobId) end
+                            continue
+                        end
+
+                        -- Hidden system messages handler
+                        if m.h then
+                            if m.m == "Joined" and m.u:lower() ~= LocalPlayer.Name:lower() then
+                                displayMessage(m.u, (m.d or m.u) .. " joined the chat.", nil, false, m.d)
+                            end
+                            continue
+                        end
+
+                        -- Chat scope filter
+                        if chatMode == "server" and m.j ~= game.JobId then continue end
+
+                        -- Private message handler
+                        local pSender, pTarget, pMsg = string.match(m.m, "^%( 🔐 ([%w_]+) Private ([%w_]+)%) (.*)$")
+                        if pSender and pTarget then
+                            if LocalPlayer.Name == pSender then displayMessage(m.u, pMsg, pTarget, true) displayBubble(m.u, pMsg)
+                            elseif LocalPlayer.Name == pTarget then displayMessage(m.u, pMsg, pSender, false) displayBubble(m.u, pMsg) end
+                            continue
+                        end
+
+                        checkMention(m.m)
+                        displayMessage(m.u, m.m, nil, false, m.d)
+                        displayBubble(m.u, m.m)
+                    end
+                end
+            end
+        else
+            -- Exponential backoff step during idle periods
+            currentPollRate = math.min(MAX_POLL_RATE, currentPollRate + POLL_BACKOFF)
         end
     end
 end
 
 -- Initialize Routine
 task.spawn(function()
-    updatePresence()
-
-    -- Pre-fetch recent keys to avoid echoing old historical messages
-    local initialRaw = apiReq('/global/messages?orderBy="$key"&limitToLast=15')
-    local initialData = parseFirebaseData(initialRaw)
-    for _, m in ipairs(initialData) do
-        local msgId = m._id or (m.user .. "_" .. tostring(m.time))
-        processedMsgIds[msgId] = true
-        if tonumber(m.time) and tonumber(m.time) > lastSyncTime then lastSyncTime = tonumber(m.time) end
-    end
-
-    -- Send Join Event
-    apiReq("/global/messages", "POST", { 
-        user = LocalPlayer.Name, 
-        displayName = LocalPlayer.DisplayName, 
-        msg = "Joined", 
-        jobId = game.JobId, 
-        hidden = true, 
-        time = os.time() 
-    })
-
+    lastSyncTime = os.time()
+    sendFirebaseMessage("Joined", false, nil, true)
     task.wait(0.2)
     pollMessages()
 end)

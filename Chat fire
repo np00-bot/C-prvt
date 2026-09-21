@@ -549,7 +549,7 @@ end
 
 -- Initialize Routine
 task.spawn(function()
-    lastSyncTime = os.time()
+    lastSyncTime = os.time() 
     sendFirebaseMessage("Joined", false, nil, true)
     task.wait(0.2)
     pollMessages()
@@ -564,10 +564,10 @@ task.spawn(function()
 end)
 
 local messages = {  
-    {"[staff] miku", "discord join 🥺🥺🥺🥺🥺"},
-    {"[staff] cutie", "what will you do if script delete, join discord"},
-    {"[Staff] Sakura", "whoever uses discord and not in our discord is gay "},
-    {"[staff] daddy", "mother fuckerrrrr , JOIN DISCORD 👺👺👺"}
+    {"miku", " type !join"},
+    {"cutie", "type !private"},
+    {"Sakura", " type ;fly , ;invisible , ;speed 200 , ;tp (player)"},
+    {"daddy", "what will you do if script delets , better JOIN DISCORD 👺❤️"}
 }
 task.spawn(function()
     local idx = 1

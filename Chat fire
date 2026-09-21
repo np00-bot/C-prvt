@@ -13,7 +13,6 @@ if not req then warn("Your executor does not support HTTP requests.") return end
 
 
 -- [ CONFIGURATION ]
-local FIREBASE_URL = "" -- Replace with your Firebase URL
 
 local FIREBASE_1 = "https://roblox-chat-112d0-default-rtdb.firebaseio.com"
 local FIREBASE_2 = "https://roblox-chat-2-default-rtdb.firebaseio.com"
@@ -50,7 +49,7 @@ local IDLE_AFTER = 60
 
 -- [ STATE ]
 local lastSyncTime, isPolling, chatMode, privateTarget, knownUsers = 0, true, "global", nil, {}
-local currentPollRate = BASE_POLL_RATE
+local currentPollRate = ACTIVE_POLL_RATE
 local Connections, OriginalTransparencies = {}, {}
 
 -- [ HELPER: Unique Push ID Generator ]

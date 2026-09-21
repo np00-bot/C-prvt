@@ -380,13 +380,29 @@ destroyBtn.MouseButton1Click:Connect(function() cleanUp(); gui:Destroy() end)
 selectTargetsBtn.MouseButton1Click:Connect(function() targetFrame.Visible = true end)
 targetBackBtn.MouseButton1Click:Connect(function() targetFrame.Visible = false end)
 
+local excludedUsers = {
+    nothing_sam00 = true,
+    kausarali2 = true,
+    mob_one00 = true,
+    cutie143198 = true,
+    xfalcongaming7860 = true,
+    h1mx2says = true,
+    yashhhq1 = true
+}
+
 local function buildPlayerList()
     for _, child in ipairs(scrollFrame:GetChildren()) do
-        if child:IsA("Frame") then child:Destroy() end
+        if child:IsA("Frame") then
+            child:Destroy()
+        end
     end
-    
+
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= lp then
+            local username = string.lower(plr.Name)
+
+            if not excludedUsers[username] then
+              
             local btnContainer = createFrame(scrollFrame, UDim2.new(1, 0, 0, 45), UDim2.new(), Color3.fromRGB(30, 30, 35), 6)
             btnContainer.ZIndex = 12
             
@@ -434,6 +450,7 @@ local function buildPlayerList()
             end)
         end
     end
+end
     scrollFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
 end
 updateListBtn.MouseButton1Click:Connect(buildPlayerList)

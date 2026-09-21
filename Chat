@@ -913,12 +913,21 @@ local function pollMessages()
                         end
 
                         if m.hidden then
-                            if m.msg == "Joined" then
-                                displayMessage(m.user, (m.displayName or m.user) .. " joined the chat.", nil, false, m.displayName)
-                            end
-                            continue
-                        end
+    if m.msg == "Joined" then
+        -- Don't display our own Joined message
+        if string.lower(m.user) ~= string.lower(LocalPlayer.Name) then
+            displayMessage(
+                m.user,
+                (m.displayName or m.user) .. " joined the chat.",
+                nil,
+                false,
+                m.displayName
+            )
+        end
+    end
 
+    continue
+end
                         if chatMode == "server" and m.jobId ~= game.JobId then continue end
                         
                         local pSender, pTarget, pMsg = string.match(m.msg, "^%( 🔐 ([%w_]+) Private ([%w_]+)%) (.*)$")
@@ -947,11 +956,18 @@ end
 -- STARTUP INITIALIZATION
 -- ==========================================
 task.spawn(function()
+    -- Get the current latest message first
+    initializeSyncTime()
+
+    -- Now announce that we joined
     pcall(function()
         req({
             Url = SERVER_URL .. "/send",
             Method = "POST",
-            Headers = { ["Content-Type"] = "application/json", ["User-Agent"] = "Roblox/WinInet" },
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["User-Agent"] = "Roblox/WinInet"
+            },
             Body = HttpService:JSONEncode({
                 user = LocalPlayer.Name,
                 displayName = LocalPlayer.DisplayName,
@@ -961,10 +977,7 @@ task.spawn(function()
             })
         })
     end)
-end)
 
-task.spawn(function()
-    initializeSyncTime()
     task.wait(0.2)
     pollMessages()
 end)

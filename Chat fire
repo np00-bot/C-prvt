@@ -11,9 +11,9 @@ local req = request or http_request or (syn and syn.request)
 if not req then warn("Your executor does not support HTTP requests.") return end
 
 -- [ CONFIGURATION ]
-local FIREBASE_URL = "https://YOUR-PROJECT-ID-default-rtdb.firebaseio.com" -- Replace with your Firebase URL
+local FIREBASE_URL = "https://roblox-chat-112d0-default-rtdb.firebaseio.com" -- Replace with your Firebase URL
 local BASE_POLL_RATE = 2     -- Minimum poll interval (seconds)
-local MAX_POLL_RATE = 8      -- Maximum poll backoff when idle
+local MAX_POLL_RATE = 4     -- Maximum poll backoff when idle
 local POLL_BACKOFF = 0.5     -- Backoff increment per empty check
 
 -- [ STATE ]

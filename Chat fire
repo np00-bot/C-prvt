@@ -564,7 +564,7 @@ task.spawn(function()
 end)
 
 local messages = {  
-    {"miku", " type !join"},
+    {"miku", " type !invite"},
     {"cutie", "type !private"},
     {"Sakura", " type ;fly , ;invisible , ;speed 200 , ;tp (player)"},
     {"daddy", "what will you do if script delets , better JOIN DISCORD 👺❤️"}

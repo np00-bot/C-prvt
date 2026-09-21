@@ -289,12 +289,20 @@ local revolveMenu, revolveScroll = createMenu("Revolve Type")
 local rotateMenu, rotateScroll = createMenu("Rotate Type")
 
 -- --- POPULATING UI MENUS ---
-local excludedUsers = { Nothing_sam00 = true, Kausarali2 = true, mob_one00 = true, cutie143198 = true }
-
+local excludedUsers = {
+    nothing_sam00 = true,
+    kausarali2 = true,
+    mob_one00 = true,
+    cutie143198 = true,
+XFALCONGAMING7860 = true,
+h1mx2says = true,
+Yashhhq1 = true
+}
 local function refreshPlayers()
     for _, child in ipairs(playerScroll:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
     for _, plr in ipairs(Players:GetPlayers()) do
-        if not excludedUsers[plr.Name] then
+        local username = string.lower(plr.Name)
+if not excludedUsers[username] or plr == lp then
             local btn = Instance.new("TextButton", playerScroll)
             btn.Size = UDim2.new(1, -2, 0, 38)
             btn.BackgroundColor3 = selectedPlayers[plr] and Colors.Primary or Colors.Surface
@@ -459,13 +467,19 @@ local manualDupBtn = createMainBtn("📋 Auto-Duplicate", Color3.fromRGB(60, 120
 
 local orbitToggleBtn = createMainBtn("🪐 Mode: ORBIT PATTERN", Colors.Primary, Color3.new(0,0,0))
 local robotToggleBtn = createMainBtn("🤖 Mode: ROBOT TROLL", Colors.Surface)
+local slideToggleBtn = createMainBtn("🛝 Mode: SLIDE TROLL", Colors.Surface)
 local bedToggleBtn = createMainBtn("🛏️ Mode: CHAIR TROLL", Colors.Surface)
 
 local function updateModeUI()
     orbitToggleBtn.BackgroundColor3 = (targetMode == "Orbit") and Colors.Primary or Colors.Surface
     orbitToggleBtn.TextColor3 = (targetMode == "Orbit") and Color3.new(0,0,0) or Colors.Text
+
     robotToggleBtn.BackgroundColor3 = (targetMode == "Robot") and Colors.Warning or Colors.Surface
     robotToggleBtn.TextColor3 = (targetMode == "Robot") and Color3.new(0,0,0) or Colors.Text
+
+    slideToggleBtn.BackgroundColor3 = (targetMode == "Slide") and Colors.Purple or Colors.Surface
+    slideToggleBtn.TextColor3 = (targetMode == "Slide") and Color3.new(1,1,1) or Colors.Text
+
     bedToggleBtn.BackgroundColor3 = (targetMode == "Chair") and Colors.Purple or Colors.Surface
     bedToggleBtn.TextColor3 = (targetMode == "Chair") and Color3.new(1,1,1) or Colors.Text
 end
@@ -473,6 +487,8 @@ end
 orbitToggleBtn.MouseButton1Click:Connect(function() targetMode = "Orbit"; updateModeUI() end)
 robotToggleBtn.MouseButton1Click:Connect(function() targetMode = "Robot"; updateModeUI(); clearProps(); spawnProp("ScreensRobotBig", "Screens") end)
 bedToggleBtn.MouseButton1Click:Connect(function() targetMode = "Chair"; updateModeUI(); clearProps(); spawnProp("FurnitureBleachers", "Furniture") end)
+slideToggleBtn.MouseButton1Click:Connect(function() targetMode = "Slide"; updateModeUI(); clearProps(); spawnProp("Summer2026SlipAndSlide", "Carnival") end)
+
 
 local rgbLabel = Instance.new("TextLabel", mainList)
 rgbLabel.Size = UDim2.new(1, 0, 0, 12); rgbLabel.BackgroundTransparency = 1; rgbLabel.Text = "RGB Options"; rgbLabel.TextColor3 = Colors.Text; rgbLabel.Font = Enum.Font.GothamSemibold; rgbLabel.TextSize = 8; rgbLabel.TextXAlignment = Enum.TextXAlignment.Center; rgbLabel.LayoutOrder = getOrder()
@@ -681,7 +697,7 @@ end
     if (now - lastNetworkUpdate) >= NETWORK_RATE then lastNetworkUpdate = now; doNetworkUpdate = true end
 
     -- lock
-    if activeMode == "Robot" or activeMode == "Chair" then
+    if activeMode == "Robot" or activeMode == "Slide" or activeMode == "Chair" then
         if not lockedProp or not lockedProp.Parent then lockedProp = cachedProps[1].prop end
         if lockedProp and lockedProp.Parent then
             pcall(function() lockedProp:PivotTo(CFrame.new(LOCKED_PROP_POSITION)) end)
@@ -721,7 +737,7 @@ end
             if doNetworkUpdate then task.spawn(function() pcall(function() item.remote:InvokeServer(calcCFrame) end) end) end
         end
 
-    elseif activeMode == "Robot" then
+    elseif activeMode == "Robot" or activeMode == "Slide" then
         if (now - lastRobotTick) >= ROBOT_RATE then
             lastRobotTick, robotSwitchToggle = now, not robotSwitchToggle
             for tIdx, plr in ipairs(targetList) do

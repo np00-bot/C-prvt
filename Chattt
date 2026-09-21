@@ -1,0 +1,589 @@
+if _G.ScriptChatxecuted then return end
+_G.ScriptChatxecuted = true
+
+local g = game
+local Players, HttpService, StarterGui, TextChatService, TextService, UserInputService, ChatService, RunService, TeleportService = 
+    g:GetService("Players"), g:GetService("HttpService"), g:GetService("StarterGui"), g:GetService("TextChatService"), 
+    g:GetService("TextService"), g:GetService("UserInputService"), g:GetService("Chat"), g:GetService("RunService"), g:GetService("TeleportService")
+
+local LocalPlayer = Players.LocalPlayer
+local req = request or http_request or (syn and syn.request)
+if not req then warn("Your executor does not support HTTP requests.") return end
+
+local FIREBASE_URL = "https://roblox-chat-112d0-default-rtdb.firebaseio.com"
+local FIREBASE_MESSAGES_PATH = "/global/messages"
+local lastSyncTime, isPolling, chatMode, privateTarget, knownUsers = 0, true, "global", nil, {}
+local Connections, OriginalTransparencies = {}, {}
+
+local function create(class, props)
+    local inst = Instance.new(class)
+    for k, v in pairs(props or {}) do inst[k] = v end
+    return inst
+end
+
+-- Firebase Realtime Database REST helper.
+-- Firebase returns messages as an object keyed by generated message IDs,
+-- while the rest of this script expects an array. This helper converts
+-- the Firebase response into the same array format used by the old Worker.
+
+local function firebaseUrl(path, query)
+    return FIREBASE_URL .. path .. ".json" .. (query or "")
+end
+
+local function firebaseDecode(body)
+    local ok, data = pcall(HttpService.JSONDecode, HttpService, body)
+    return ok and data or nil
+end
+
+local function firebaseMessagesToArray(data)
+    local result = {}
+
+    if type(data) ~= "table" then
+        return result
+    end
+
+    for id, message in pairs(data) do
+        if type(message) == "table" then
+            message._firebaseId = tostring(id)
+            table.insert(result, message)
+        end
+    end
+
+    table.sort(result, function(a, b)
+        return (tonumber(a.time) or 0) < (tonumber(b.time) or 0)
+    end)
+
+    return result
+end
+
+local function apiReq(endpoint, method, body)
+    method = method or "GET"
+
+    -- The old script calls /messages?since=TIME.
+    -- Map that request to Firebase's ordered REST query.
+    if endpoint:sub(1, 9) == "/messages" then
+        local since = tonumber(endpoint:match("[?&]since=(%-?%d+)")) or 0
+
+        local query = '?orderBy=%22time%22&startAt=' .. tostring(since + 1)
+
+        local ok, res = pcall(req, {
+            Url = firebaseUrl(FIREBASE_MESSAGES_PATH, query),
+            Method = "GET",
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["User-Agent"] = "Roblox/WinInet"
+            }
+        })
+
+        if ok and res and (res.StatusCode == 200 or res.StatusCode == 204) then
+            local data = firebaseDecode(res.Body or "null")
+            return firebaseMessagesToArray(data)
+        end
+
+        return nil
+    end
+
+    -- The old script calls /send with a message table.
+    if endpoint == "/send" and method == "POST" then
+        if type(body) ~= "table" then
+            return nil
+        end
+
+        body.time = tonumber(body.time) or os.time()
+
+        local ok, res = pcall(req, {
+            Url = firebaseUrl(FIREBASE_MESSAGES_PATH),
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["User-Agent"] = "Roblox/WinInet"
+            },
+            Body = HttpService:JSONEncode(body)
+        })
+
+        if ok and res and (res.StatusCode == 200 or res.StatusCode == 201) then
+            return firebaseDecode(res.Body or "{}") or {}
+        end
+
+        return nil
+    end
+
+    return nil
+end
+
+local function toLowerKeys(tbl)
+    local newTbl = {}
+    if type(tbl) == "table" then
+        for k, v in pairs(tbl) do newTbl[type(k) == "string" and k:lower() or k] = v end
+    end
+    return newTbl
+end
+
+local _, RawTags = pcall(function() return loadstring(g:HttpGet("https://raw.githubusercontent.com/Sam00-debug/C-/refs/heads/main/Illusion"))() end)
+RawTags = RawTags or {}
+local Tags = {
+    Owner = toLowerKeys(RawTags.Owner), Admin = toLowerKeys(RawTags.Admin),
+    Staff = toLowerKeys(RawTags.Staff), VIP = toLowerKeys(RawTags.VIP), Mod = toLowerKeys(RawTags.Mod)
+}
+
+-- UI Setup
+local ScreenGui = create("ScreenGui", { Name = "HiddenChatUI", ResetOnSpawn = false, Parent = (gethui and gethui()) or g:GetService("CoreGui") or LocalPlayer:WaitForChild("PlayerGui") })
+local MainFrame = create("Frame", { Size = UDim2.new(0, 200, 0, 30), Position = UDim2.new(0, 15, 1, -45), BackgroundColor3 = Color3.fromRGB(20, 20, 20), BackgroundTransparency = 0.2, Active = true, Parent = ScreenGui })
+create("UICorner", { CornerRadius = UDim.new(0, 6), Parent = MainFrame })
+
+local DragHandle = create("TextButton", { Size = UDim2.new(0, 30, 1, 0), BackgroundTransparency = 1, Text = "ðŸ’¬ :", TextColor3 = Color3.fromRGB(150, 150, 150), TextSize = 16, Font = Enum.Font.GothamBold, Parent = MainFrame })
+local PrivateBtn = create("TextButton", { Size = UDim2.new(0, 0, 1, -6), Position = UDim2.new(0, 30, 0, 3), BackgroundColor3 = Color3.fromRGB(40, 40, 40), TextColor3 = Color3.fromRGB(255, 200, 50), Font = Enum.Font.GothamBold, TextSize = 12, Visible = false, Parent = MainFrame })
+create("UICorner", { CornerRadius = UDim.new(0, 4), Parent = PrivateBtn })
+
+local TextBox = create("TextBox", { Size = UDim2.new(1, -50, 1, 0), Position = UDim2.new(0, 30, 0, 0), BackgroundTransparency = 1, TextColor3 = Color3.fromRGB(255, 255, 255), PlaceholderText = " press ; to type..", Font = Enum.Font.GothamMedium, TextSize = 13, Text = "", ClearTextOnFocus = false, TextXAlignment = Enum.TextXAlignment.Left, Parent = MainFrame })
+create("UIPadding", { PaddingLeft = UDim.new(0, 5), Parent = TextBox })
+local ResizeHandle = create("TextButton", { Size = UDim2.new(0, 20, 0, 20), Position = UDim2.new(1, 0, 1, 0), AnchorPoint = Vector2.new(1, 1), BackgroundTransparency = 1, Text = "[â—¢]", TextColor3 = Color3.fromRGB(150, 150, 150), TextSize = 12, Font = Enum.Font.Gotham, Parent = MainFrame })
+
+-- Emoji Menu
+local EmojiFrame = create("Frame", { Name = "EmojiPanel", Size = UDim2.new(0, 320, 0, 280), Position = UDim2.new(0.5, -160, 0.5, -140), BackgroundColor3 = Color3.fromRGB(25, 25, 25), Visible = false, Active = true, Parent = ScreenGui })
+create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = EmojiFrame })
+local EmojiTopBar = create("Frame", { Size = UDim2.new(1, 0, 0, 30), BackgroundColor3 = Color3.fromRGB(15, 15, 15), Parent = EmojiFrame })
+create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = EmojiTopBar })
+create("TextLabel", { Size = UDim2.new(1, -40, 1, 0), Position = UDim2.new(0, 10, 0, 0), BackgroundTransparency = 1, Text = "emojis", TextColor3 = Color3.fromRGB(200, 200, 200), Font = Enum.Font.GothamBold, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left, Parent = EmojiTopBar })
+
+local EmojiClose = create("TextButton", { Size = UDim2.new(0, 30, 0, 30), Position = UDim2.new(1, -30, 0, 0), BackgroundTransparency = 1, Text = "X", TextColor3 = Color3.fromRGB(255, 100, 100), Font = Enum.Font.GothamBold, TextSize = 14, Parent = EmojiTopBar })
+EmojiClose.MouseButton1Click:Connect(function() EmojiFrame.Visible = false end)
+
+local EmojiScroll = create("ScrollingFrame", { Size = UDim2.new(1, -10, 1, -40), Position = UDim2.new(0, 5, 0, 35), BackgroundTransparency = 1, ScrollBarThickness = 4, CanvasSize = UDim2.new(0, 0, 5, 0), Parent = EmojiFrame })
+create("UIGridLayout", { CellSize = UDim2.new(0, 35, 0, 35), CellPadding = UDim2.new(0, 2, 0, 2), Parent = EmojiScroll })
+
+local emojis = "ðŸ˜ƒðŸ˜ðŸ˜†ðŸ˜…ðŸ¤£ðŸ˜­ðŸ˜‰ðŸ˜—ðŸ˜™ðŸ˜šðŸ˜˜ðŸ¥°ðŸ˜ðŸ¤©ðŸ¥³ðŸ« ðŸ™ƒðŸ™‚ðŸ¥²ðŸ¥¹ðŸ˜Šâ˜ºï¸ðŸ˜ŒðŸ˜ðŸ˜´ðŸ˜ªðŸ¤¤ðŸ˜‹ðŸ˜›ðŸ˜ðŸ˜œðŸ¤ªðŸ¥´ðŸ˜”ðŸ¥ºðŸ˜¬ðŸ«¥ðŸ˜‘ðŸ˜ðŸ˜¶ðŸ˜¶â€ðŸŒ«ï¸ðŸ¤ðŸ«¡ðŸ¤”ðŸ¤«ðŸ«¢ðŸ¤­ðŸ¥±ðŸ¤—ðŸ«£ðŸ˜±ðŸ¤¨ðŸ§ðŸ˜’ðŸ™„ðŸ˜®â€ðŸ’¨ðŸ˜¤ðŸ˜ ðŸ˜¡ðŸ¤¬ðŸ˜žðŸ˜“ðŸ˜ŸðŸ˜¥ðŸ˜¢â˜¹ï¸ðŸ™ðŸ«¤ðŸ˜•ðŸ˜°ðŸ˜¨ðŸ˜§ðŸ˜¦ðŸ˜®ðŸ˜¯ðŸ˜²ðŸ˜³ðŸ¤¯ðŸ˜–ðŸ˜£ðŸ˜©ðŸ˜«ðŸ˜µðŸ˜µâ€ðŸ’«ðŸ«¨ðŸ¥¶ðŸ¥µðŸ¤¢ðŸ¤®ðŸ¤§ðŸ¤’ðŸ¤•ðŸ˜·ðŸ¤¥ðŸ˜‡ðŸ¤ ðŸ¤‘ðŸ¤“ðŸ˜ŽðŸ¥¸ðŸ¤¡ðŸ˜ˆðŸ‘¿ðŸ‘»ðŸŽƒðŸ’©ðŸ¤–ðŸ‘½ðŸ‘¾ðŸŒ›ðŸŒœðŸŒšðŸŒðŸŒžâ˜ ï¸ðŸ‘¹ðŸ‘ºðŸ”¥ðŸ’¯ðŸ’«â­ðŸŒŸâœ¨ðŸ’¥ðŸ’¨ðŸ’¦ðŸ’¤ðŸŽ‰ðŸ™ˆðŸ™‰ðŸ™ŠðŸ˜ºðŸ˜¸ðŸ˜¹ðŸ˜»ðŸ˜¼ðŸ˜½ðŸ™€ðŸ˜¿ðŸ˜¾â¤ï¸ðŸ–¤ðŸ¤ðŸ’˜ðŸ’ðŸ’–ðŸ’—ðŸ’“ðŸ’žðŸ’•â™¥ï¸â£ï¸â¤ï¸â€ðŸ©¹ðŸ’”â¤ï¸â€ðŸ”¥ðŸ’‹ðŸ—£ï¸ðŸ’€ðŸ‘€ðŸ‘„ðŸ«¦ðŸ‘…ðŸ’ªðŸ»ðŸ‘ðŸ»ðŸ‘ðŸ»ðŸ‘ŽðŸ»ðŸ™ŒðŸ»ðŸ¤ðŸ«´ðŸ»ðŸ‘‹ðŸ»âœ‹ðŸ»ðŸ¤ŸðŸ»ðŸ«°ðŸ»ðŸ¤™ðŸ»ðŸ¤ŒðŸ»ðŸ‘ŒðŸ»ðŸ‘‰ðŸ»ðŸ‘ˆðŸ»ðŸ–•ðŸ»ðŸ™ðŸ»ðŸ’…ðŸ»ðŸ™…ðŸ»â€â™‚ï¸ðŸ¤·ðŸ»â€â™‚ï¸ðŸ¤¦ðŸ»â€â™‚ï¸ðŸ’ðŸ’ðŸŒ¹ðŸ¥€ðŸŒ·ðŸµï¸â„ï¸â˜ƒï¸ðŸŒˆðŸ«§ðŸŒðŸŒšðŸ•³ï¸â­ðŸŒŸâœ¨ðŸ‘ðŸŒðŸ†ðŸŒ½ðŸ—ðŸ•ðŸŒ­ punchesðŸŒ­ðŸœðŸ­ðŸ¼â˜•ðŸ¥ƒðŸŽŠðŸŽ‚ðŸŽ€ðŸŽƒâš½ðŸŽ¨ðŸ“žðŸ’¸ðŸ’°ðŸ’ŽðŸ‘ ðŸª“ðŸ”âŒðŸ’¬â“ðŸ’¢âš ï¸"
+if utf8 and utf8.graphemes then
+    for p, c in utf8.graphemes(emojis) do
+        local char = string.sub(emojis, p, c)
+        local btn = create("TextButton", { Text = char, TextSize = 20, BackgroundTransparency = 1, Parent = EmojiScroll })
+        btn.MouseButton1Click:Connect(function() TextBox.Text = TextBox.Text .. char TextBox:CaptureFocus() end)
+    end
+end
+
+-- Interactivity & Keybinds
+local function makeDraggable(trigger, target)
+    local dragging, dragStart, startPos
+    trigger.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging, dragStart, startPos = true, input.Position, target.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            target.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+makeDraggable(DragHandle, MainFrame)
+makeDraggable(EmojiTopBar, EmojiFrame)
+
+local resizing, resizeStart, startSize
+ResizeHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        resizing, resizeStart, startSize = true, input.Position, MainFrame.Size
+        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then resizing = false end end)
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - resizeStart
+        MainFrame.Size = UDim2.new(0, math.clamp(startSize.X.Offset + delta.X, 150, 500), 0, math.clamp(startSize.Y.Offset + delta.Y, 30, 150))
+    end
+end)
+
+local lastExclamation = 0
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp and UserInputService:GetFocusedTextBox() ~= TextBox then return end
+    if input.KeyCode == Enum.KeyCode.Semicolon then
+        task.delay(0.05, function() TextBox:CaptureFocus() end)
+    elseif input.KeyCode == Enum.KeyCode.One and UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+        lastExclamation = tick()
+    elseif input.KeyCode == Enum.KeyCode.E and tick() - lastExclamation < 1.5 and not UserInputService.TouchEnabled then
+        EmojiFrame.Visible = not EmojiFrame.Visible
+        if TextBox:IsFocused() then task.delay(0.01, function() TextBox.Text = string.gsub(TextBox.Text, "!e$", "") end) end
+    end
+end)
+
+-- Admin Commands Logic
+local function getPlayer(nameStr)
+    if not nameStr or nameStr == "" then return nil end
+    local lowerName = nameStr:lower()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Name:lower():sub(1, #lowerName) == lowerName or p.DisplayName:lower():sub(1, #lowerName) == lowerName then return p end
+    end
+end
+
+local function sendToRobloxChat(msg)
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+        if channel then channel:SendAsync(msg) end
+    else
+        local events = g:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
+        if events and events:FindFirstChild("SayMessageRequest") then events.SayMessageRequest:FireServer(msg, "All") end
+    end
+end
+
+local CommandList = {
+    fly = function() sendToRobloxChat(";fly") end,
+    unfly = function() sendToRobloxChat(";unfly") end,
+    speed = function(arg) local char = LocalPlayer.Character if char and char:FindFirstChild("Humanoid") then char.Humanoid.WalkSpeed = tonumber(arg) or 16 end end,
+    jumppower = function(arg) local char = LocalPlayer.Character if char and char:FindFirstChild("Humanoid") then char.Humanoid.UseJumpPower, char.Humanoid.JumpPower = true, tonumber(arg) or 50 end end,
+    spin = function(state)
+        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            if hrp:FindFirstChild("AdminSpin") then hrp.AdminSpin:Destroy() end
+            if state ~= false then
+                local spin = create("BodyAngularVelocity", { Name = "AdminSpin", AngularVelocity = Vector3.new(0, 20, 0), MaxTorque = Vector3.new(0, math.huge, 0), Parent = hrp })
+            end
+        end
+    end,
+    orbit = function(arg, state)
+        if Connections.Orbit then Connections.Orbit:Disconnect() Connections.Orbit = nil end
+        local tPlayer = getPlayer(arg)
+        if state == false or not tPlayer then return end
+        local angle, speed, radius = 0, 2, 8
+        Connections.Orbit = RunService.RenderStepped:Connect(function(dt)
+            local char, tChar = LocalPlayer.Character, tPlayer.Character
+            if char and tChar and char:FindFirstChild("HumanoidRootPart") and tChar:FindFirstChild("HumanoidRootPart") then
+                angle = angle + speed * dt
+                local tPos = tChar.HumanoidRootPart.Position
+                char.HumanoidRootPart.CFrame = CFrame.new(tPos + Vector3.new(math.cos(angle)*radius, 0, math.sin(angle)*radius), tPos)
+                char.HumanoidRootPart.Velocity = Vector3.zero
+            end
+        end)
+    end,
+    view = function(arg, state)
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+        if state == false then workspace.CurrentCamera.CameraSubject = hum return end
+        local target = getPlayer(arg)
+        if target and target.Character and target.Character:FindFirstChild("Humanoid") then workspace.CurrentCamera.CameraSubject = target.Character.Humanoid end
+    end,
+    tp = function(arg)
+        local target, char = getPlayer(arg), LocalPlayer.Character
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+        end
+    end,
+    invisible = function(state)
+        local char = LocalPlayer.Character
+        if not char then return end
+        for _, part in pairs(char:GetDescendants()) do
+            if (part:IsA("BasePart") or part:IsA("Decal")) and part.Name ~= "HumanoidRootPart" then
+                if state ~= false then
+                    OriginalTransparencies[part] = OriginalTransparencies[part] or part.Transparency
+                    part.Transparency = 1
+                    if part:IsA("ParticleEmitter") or part:IsA("Trail") then part.Enabled = false end
+                else
+                    part.Transparency = OriginalTransparencies[part] or 0
+                    if part:IsA("ParticleEmitter") or part:IsA("Trail") then part.Enabled = true end
+                end
+            end
+        end
+    end,
+    noclip = function(state)
+        if Connections.Noclip then Connections.Noclip:Disconnect() Connections.Noclip = nil end
+        if state == false then return end
+        Connections.Noclip = RunService.Stepped:Connect(function()
+            if LocalPlayer.Character then for _, p in pairs(LocalPlayer.Character:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end end
+        end)
+    end,
+    nosit = function(state)
+        if Connections.NoSit then Connections.NoSit:Disconnect() Connections.NoSit = nil end
+        if state == false then return end
+        Connections.NoSit = RunService.Stepped:Connect(function()
+            local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+            if hum and hum.Sit then hum.Sit = false end
+        end)
+    end,
+    copyserverid = function() pcall(function() if setclipboard then setclipboard(tostring(game.JobId)) else warn("Clipboard not supported.") end end) end
+}
+
+-- Aliases
+local aliases = {
+    nofly = "unfly", unspeed = "speed", jp = "jumppower", unjumppower = "jumppower", unspin = "spin", nospin = "spin",
+    unorbit = "orbit", unview = "view", noview = "view", to = "tp", teleport = "tp", goto = "tp", serverid = "copyserverid",
+    jobid = "copyserverid", visible = "invisible", vis = "invisible", invis = "invisible", unnoclip = "noclip", clip = "noclip", sit = "nosit", unnosit = "nosit"
+}
+for alias, orig in pairs(aliases) do CommandList[alias] = function(arg) CommandList[orig](arg, false) end end
+
+local function processCommand(text)
+    local cleanStr = text:match("^%s*[/,;:!.]?%s*(.-)%s*$")
+    if not cleanStr or cleanStr == "" then return false end
+    local cmd, args = cleanStr:lower():match("^(%S+)%s*(.*)$")
+    if cmd and CommandList[cmd] then pcall(CommandList[cmd], args) return true end
+    return false
+end
+LocalPlayer.Chatted:Connect(processCommand)
+
+-- Helpers & Display System
+local userColors = { Color3.fromRGB(255, 89, 89), Color3.fromRGB(89, 255, 89), Color3.fromRGB(89, 172, 255), Color3.fromRGB(255, 89, 255), Color3.fromRGB(255, 172, 89), Color3.fromRGB(89, 255, 255), Color3.fromRGB(172, 89, 255) }
+local function getHexColorForUser(username)
+    local value = 0
+    for i = 1, #username do value = value + string.byte(username, i) end
+    local color = userColors[(value % #userColors) + 1]
+    return string.format("#%02X%02X%02X", color.R * 255, color.G * 255, color.B * 255)
+end
+
+local function updateInputLayout()
+    if privateTarget then
+        local targetPlayer = Players:FindFirstChild(privateTarget)
+        PrivateBtn.Text = " [ðŸ” " .. (targetPlayer and targetPlayer.DisplayName or privateTarget) .. "] "
+        local tagWidth = TextService:GetTextSize(PrivateBtn.Text, 12, Enum.Font.GothamBold, Vector2.new(1000, 30)).X + 10
+        PrivateBtn.Size, PrivateBtn.Visible = UDim2.new(0, tagWidth, 1, -6), true
+        TextBox.Position, TextBox.Size = UDim2.new(0, 35 + tagWidth, 0, 0), UDim2.new(1, -(55 + tagWidth), 1, 0)
+    else
+        PrivateBtn.Visible = false
+        TextBox.Position, TextBox.Size = UDim2.new(0, 30, 0, 0), UDim2.new(1, -50, 1, 0)
+    end
+end
+
+local function setPrivateTarget(username) privateTarget = username updateInputLayout() end
+PrivateBtn.MouseButton1Click:Connect(function() setPrivateTarget(nil) end)
+
+local function displayMessage(userName, msg, privateUserTarget, isPrivateSender, receivedDisplayName)
+    local speaker = Players:FindFirstChild(userName)
+    local displayName = receivedDisplayName or (speaker and speaker.DisplayName) or userName
+    local lowerUser = userName:lower()
+
+    local rtsTag, legacyTag = "", ""
+    if Tags.Admin[lowerUser] then rtsTag, legacyTag = "<font color='#FF0000'>[Admin]</font> ", "[Admin] "
+    elseif Tags.Owner[lowerUser] then rtsTag, legacyTag = "<font color='#FFFF00'>[ðŸ‘‘]</font> ", "[ðŸ‘‘] "
+    elseif Tags.Staff[lowerUser] then rtsTag, legacyTag = "<font color='#00AAFF'>[Staff]</font> ", "[Staff] "
+    elseif Tags.Mod[lowerUser] then rtsTag, legacyTag = "<font color='#0000FF'>[Mod]</font> ", "[Mod] "
+    elseif Tags.VIP[lowerUser] then rtsTag, legacyTag = "<font color='#FFFF00'>[VIP]</font> ", "[VIP] "
+    end
+
+    local msgColor, color3Msg = "#FFFF00", Color3.fromRGB(255, 255, 0)
+    local rtsTagText, legacyTagText = "ðŸ’¬ " .. rtsTag .. displayName .. ":", "ðŸ’¬ " .. legacyTag .. displayName .. ":"
+
+    if privateUserTarget then
+        msgColor, color3Msg = "#FF9632", Color3.fromRGB(255, 150, 50)
+        rtsTagText = (isPrivateSender and "[ðŸ”To " or "[ðŸ”From ") .. privateUserTarget .. "]:"
+        legacyTagText = rtsTagText
+    end
+
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        local formattedText = string.format("<font color='%s'><b>%s</b></font> <font color='%s'><b>%s</b></font>", getHexColorForUser(userName), rtsTagText, msgColor, msg)
+        local channel = TextChatService.TextChannels:FindFirstChild("RBXSystem")
+        if channel then channel:DisplaySystemMessage(formattedText) end
+    else
+        pcall(function() StarterGui:SetCore("ChatMakeSystemMessage", { Text = legacyTagText .. " " .. msg, Color = color3Msg, Font = Enum.Font.SourceSansBold, FontSize = Enum.FontSize.Size18 }) end)
+    end
+end
+
+local function checkMention(msg)
+    if msg and string.lower(msg):find(string.lower("@" .. string.gsub(LocalPlayer.Name, "([^%w])", "%%%1")), 1, true) then
+        pcall(function() StarterGui:SetCore("SendNotification", { Title = "ðŸ’¬ Mention", Text = "Someone mentioned you in panel chat", Duration = 4 }) end)
+    end
+end
+
+local function getRecentMessagePlayers()
+    local data = apiReq("/messages?since=0")
+    if not data or type(data) ~= "table" then return {} end
+
+    local users, seen = {}, {}
+    for i = #data, math.max(1, #data - 14), -1 do
+        local m = data[i]
+        if type(m) == "table" and m.user and m.user ~= "" and not m.hidden then
+            local key = string.lower(m.user)
+            if key ~= string.lower(LocalPlayer.Name) and not seen[key] then
+                seen[key] = true
+                table.insert(users, { user = tostring(m.user), displayName = tostring(m.displayName or m.user), jobId = tostring(m.jobId or ""), time = tonumber(m.time) or 0 })
+            end
+        end
+    end
+    return users
+end
+
+-- Selection UI Modal
+local function openPlayerSelectUI(mode)
+    mode = mode or "private"
+    if ScreenGui:FindFirstChild("PlayerSelectFrame") then ScreenGui.PlayerSelectFrame:Destroy() end
+
+    local pFrame = create("Frame", { Name = "PlayerSelectFrame", Size = UDim2.new(0, 300, 0, 330), Position = UDim2.new(0.5, -150, 0.5, -165), BackgroundColor3 = Color3.fromRGB(15, 15, 17), Active = true, Parent = ScreenGui })
+    create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = pFrame })
+    create("UIStroke", { Color = Color3.fromRGB(45, 45, 50), Thickness = 1, Parent = pFrame })
+
+    create("TextLabel", { Size = UDim2.new(1, -55, 0, 42), Position = UDim2.new(0, 15, 0, 0), BackgroundTransparency = 1, Text = (mode == "private" and "Select Player to Private Chat" or "Invite Player"), TextColor3 = Color3.fromRGB(255, 255, 255), Font = Enum.Font.GothamBold, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Left, Parent = pFrame })
+    local closeBtn = create("TextButton", { Size = UDim2.new(0, 40, 0, 40), Position = UDim2.new(1, -40, 0, 0), BackgroundTransparency = 1, Text = "Ã—", TextColor3 = Color3.fromRGB(235, 64, 52), Font = Enum.Font.GothamBold, TextSize = 22, Parent = pFrame })
+    closeBtn.MouseButton1Click:Connect(function() pFrame:Destroy() end)
+
+    local scroll = create("ScrollingFrame", { Size = UDim2.new(1, -20, 1, -55), Position = UDim2.new(0, 10, 0, 48), BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 4, CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y, Parent = pFrame })
+    create("UIPadding", { PaddingBottom = UDim.new(0, 5), Parent = scroll })
+    create("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = scroll })
+
+    local recentPlayers = getRecentMessagePlayers()
+    for index, data in ipairs(recentPlayers) do
+        local pBtn = create("TextButton", { Name = "Player_" .. data.user, Size = UDim2.new(1, -5, 0, 52), BackgroundColor3 = Color3.fromRGB(24, 24, 28), AutoButtonColor = true, Text = "", LayoutOrder = index, Parent = scroll })
+        create("UICorner", { CornerRadius = UDim.new(0, 6), Parent = pBtn })
+        create("UIStroke", { Color = Color3.fromRGB(40, 40, 45), Thickness = 1, Parent = pBtn })
+
+        create("TextLabel", { Size = UDim2.new(1, -20, 0, 25), Position = UDim2.new(0, 10, 0, 3), BackgroundTransparency = 1, Text = data.displayName, TextColor3 = Color3.fromRGB(255, 255, 255), Font = Enum.Font.GothamMedium, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, Parent = pBtn })
+        create("TextLabel", { Size = UDim2.new(1, -20, 0, 20), Position = UDim2.new(0, 10, 0, 27), BackgroundTransparency = 1, Text = "@" .. data.user, TextColor3 = Color3.fromRGB(130, 130, 135), Font = Enum.Font.Gotham, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, Parent = pBtn })
+
+        pBtn.MouseButton1Click:Connect(function()
+            if mode == "private" then
+                setPrivateTarget(data.user)
+                pFrame:Destroy()
+            elseif mode == "invite" then
+                if data.jobId == "" then displayMessage("System", "No server ID available for @" .. data.user) return end
+                pBtn.Text = "Joining..."
+                pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, data.jobId, LocalPlayer) end)
+            end
+        end)
+    end
+
+    if #recentPlayers == 0 then
+        create("TextLabel", { Size = UDim2.new(1, 0, 0, 50), BackgroundTransparency = 1, Text = "No recent players found.", TextColor3 = Color3.fromRGB(130, 130, 135), Font = Enum.Font.Gotham, TextSize = 13, Parent = scroll })
+    end
+end
+
+local function displayBubble(userName, msg)
+    local speaker = Players:FindFirstChild(userName)
+    if speaker and speaker.Character then
+        pcall(function()
+            if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then TextChatService:DisplayBubble(speaker.Character, msg)
+            elseif speaker.Character:FindFirstChild("Head") then ChatService:Chat(speaker.Character.Head, msg, Enum.ChatColor.White) end
+        end)
+    end
+end
+
+local function showInviteUI(senderName, targetJobId)
+    if ScreenGui:FindFirstChild("InviteRecvFrame") then ScreenGui.InviteRecvFrame:Destroy() end
+    local invFrame = create("Frame", { Name = "InviteRecvFrame", Size = UDim2.new(0, 280, 0, 180), Position = UDim2.new(0.5, -140, 0.5, -90), BackgroundColor3 = Color3.fromRGB(15, 15, 15), Active = true, Parent = ScreenGui })
+    create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = invFrame })
+
+    local closeBtn = create("TextButton", { Size = UDim2.new(0, 30, 0, 30), Position = UDim2.new(1, -35, 0, 5), BackgroundTransparency = 1, Text = "X", TextColor3 = Color3.fromRGB(255, 100, 100), Font = Enum.Font.GothamBold, TextSize = 16, Parent = invFrame })
+    closeBtn.MouseButton1Click:Connect(function() invFrame:Destroy() end)
+
+    create("TextLabel", { Size = UDim2.new(1, -20, 0, 60), Position = UDim2.new(0, 10, 0, 35), BackgroundTransparency = 1, Text = senderName .. " is inviting you to join!", TextColor3 = Color3.fromRGB(255, 255, 255), Font = Enum.Font.GothamBold, TextSize = 16, TextWrapped = true, Parent = invFrame })
+    local joinBtn = create("TextButton", { Size = UDim2.new(0, 140, 0, 40), Position = UDim2.new(0.5, -70, 1, -50), BackgroundColor3 = Color3.fromRGB(50, 200, 50), TextColor3 = Color3.fromRGB(255, 255, 255), Font = Enum.Font.GothamBold, TextSize = 16, Text = "Join Server", Parent = invFrame })
+    create("UICorner", { CornerRadius = UDim.new(0, 6), Parent = joinBtn })
+
+    joinBtn.MouseButton1Click:Connect(function()
+        joinBtn.Text = "Teleporting..."
+        pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, targetJobId, LocalPlayer) end)
+    end)
+end
+
+-- Messaging & Input System
+local function sendPrivateMessage()
+    local text = TextBox.Text
+    if not text or text == "" then return end
+    if processCommand(text) then TextBox.Text = "" return end
+
+    local lowerText = text:gsub("%s+", ""):lower()
+    TextBox.Text = ""
+
+    if lowerText == "!cmds" then
+        displayMessage("System", "Commands:\n- fly, unfly\n- speed [num], jumppower [num]\n- spin, unspin, orbit [user], unorbit\n- view [user], unview, tp [user]\n- invisible, visible, noclip, clip, sit, nosit\n- copyserverid\n- !p (private chat)\n- !i (invite player)")
+        return
+    elseif lowerText == "!server" or lowerText == "!global" then
+        chatMode = lowerText:sub(2)
+        displayMessage("System", "Chat mode switched to " .. chatMode:upper() .. ".")
+        return
+    end
+
+    local finalMsg = privateTarget and ("( ðŸ” " .. LocalPlayer.Name .. " Private " .. privateTarget .. ") " .. text) or text
+    TextBox.PlaceholderText = " Sending..."
+
+    task.spawn(function()
+        local res = apiReq("/send", "POST", { user = LocalPlayer.Name, displayName = LocalPlayer.DisplayName, msg = finalMsg, jobId = game.JobId, private = privateTarget ~= nil, source = "roblox", time = os.time() })
+        TextBox.PlaceholderText = res and " press ; to type.." or " Failed! Server offline?"
+        if not res then task.wait(2) TextBox.PlaceholderText = " press ; to type.." end
+    end)
+end
+
+TextBox.FocusLost:Connect(function(e) if e then sendPrivateMessage() end end)
+TextBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local t = TextBox.Text
+    if t:find("!e$") then
+        TextBox.Text = t:sub(1, -3)
+        if not UserInputService.TouchEnabled then EmojiFrame.Visible = not EmojiFrame.Visible end
+    elseif t:find("^!p%s*$") then
+        TextBox.Text = "" TextBox:ReleaseFocus() openPlayerSelectUI("private")
+    elseif t:find("^!i%s*$") then
+        TextBox.Text = "" TextBox:ReleaseFocus() task.defer(function() openPlayerSelectUI("invite") end)
+    end
+end)
+
+-- Polling Loop
+local function pollMessages()
+    while isPolling do
+        task.wait(2)
+        local data = apiReq("/messages?since=" .. tostring(lastSyncTime))
+        if data and type(data) == "table" then
+            for _, m in ipairs(data) do
+                if m.time > lastSyncTime then
+                    lastSyncTime = m.time
+                    knownUsers[m.user:lower()] = m.user
+
+                    local invSender, invTarget, invJobId = string.match(m.msg, "^%( ðŸ’Œ ([%w_]+) Invite ([%w_]+)%) (.+)$")
+                    if invSender and invTarget and invJobId then
+                        if invTarget:lower() == LocalPlayer.Name:lower() and invJobId ~= game.JobId then showInviteUI(invSender, invJobId) end
+                        continue
+                    end
+
+                    if m.hidden then
+                        if m.msg == "Joined" and m.user:lower() ~= LocalPlayer.Name:lower() then
+                            displayMessage(m.user, (m.displayName or m.user) .. " joined the chat.", nil, false, m.displayName)
+                        end
+                        continue
+                    end
+
+                    if chatMode == "server" and m.jobId ~= game.JobId then continue end
+
+                    local pSender, pTarget, pMsg = string.match(m.msg, "^%( ðŸ” ([%w_]+) Private ([%w_]+)%) (.*)$")
+                    if pSender and pTarget then
+                        if LocalPlayer.Name == pSender then displayMessage(m.user, pMsg, pTarget, true) displayBubble(m.user, pMsg)
+                        elseif LocalPlayer.Name == pTarget then displayMessage(m.user, pMsg, pSender, false) displayBubble(m.user, pMsg) end
+                        continue
+                    end
+
+                    checkMention(m.msg)
+                    displayMessage(m.user, m.msg, nil, false, m.displayName)
+                    displayBubble(m.user, m.msg)
+                end
+            end
+        end
+    end
+end
+
+-- Initialize Routine
+task.spawn(function()
+    local initialData = apiReq("/messages?since=0")
+    if initialData then
+        for _, m in ipairs(initialData) do
+            if tonumber(m.time) and tonumber(m.time) > lastSyncTime then lastSyncTime = tonumber(m.time) end
+        end
+    end
+
+    apiReq("/send", "POST", { user = LocalPlayer.Name, displayName = LocalPlayer.DisplayName, msg = "Joined", jobId = game.JobId, hidden = true, time = os.time() })
+    task.wait(0.2)
+    pollMessages()
+end)
+
+-- Automated System Alerts
+task.spawn(function()
+    while task.wait(350) do displayMessage("System", "\n1) !e = emojis\n2) !p = private chat \n3) !i = invite users \n4) !cmds = all commands") end
+end)
+task.spawn(function()
+    while task.wait(200) do displayMessage("System", "join DISCORD = 'VIP' title chatðŸŒŸ") end
+end)
+
+local messages = {  
+    {"[staff] miku", "discord join ðŸ¥ºðŸ¥ºðŸ¥ºðŸ¥ºðŸ¥º"},
+    {"[staff] cutie", "what will you do if script delete, join discord"},
+    {"[Staff] Sakura", "whoever uses discord and not in our discord is gay "},
+    {"[staff] daddy", "mother fuckerrrrr , JOIN DISCORD ðŸ‘ºðŸ‘ºðŸ‘º"}
+}
+task.spawn(function()
+    local idx = 1
+    while task.wait(120) do
+        displayMessage(messages[idx][1], messages[idx][2])
+        idx = (idx % #messages) + 1
+    end
+end)

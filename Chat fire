@@ -12,9 +12,9 @@ if not req then warn("Your executor does not support HTTP requests.") return end
 
 -- [ CONFIGURATION ]
 local FIREBASE_URL = "https://roblox-chat-112d0-default-rtdb.firebaseio.com" -- Replace with your Firebase URL
-local BASE_POLL_RATE = 2     -- Minimum poll interval (seconds)
-local MAX_POLL_RATE = 10     -- Maximum poll backoff when idle
-local POLL_BACKOFF = 0.5     -- Backoff increment per empty check
+local ACTIVE_POLL_RATE = 1
+local IDLE_POLL_RATE = 5
+local IDLE_AFTER = 60
 
 -- [ STATE ]
 local lastSyncTime, isPolling, chatMode, privateTarget, knownUsers = 0, true, "global", nil, {}
@@ -557,7 +557,19 @@ local function pollMessages()
                             elseif LocalPlayer.Name == pTarget then displayMessage(m.u, pMsg, pSender, false) displayBubble(m.u, pMsg) end
                             continue
                         end
+if newMessages then
+    lastMessageAt = os.clock()
+end
 
+local pollRate
+
+if os.clock() - lastMessageAt >= IDLE_AFTER then
+    pollRate = IDLE_POLL_RATE
+else
+    pollRate = ACTIVE_POLL_RATE
+end
+
+task.wait(pollRate)
                         checkMention(m.m)
                         displayMessage(m.u, m.m, nil, false, m.d)
                         displayBubble(m.u, m.m)

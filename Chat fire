@@ -59,17 +59,22 @@ local function sendFirebaseMessage(msgText, isPrivate, targetUser, isHidden)
     
     local pushID = generatePushID()
     local payload = {
-        ["chat/" .. today .. "/" .. pushID] = {
-            u = LocalPlayer.Name,
-            d = LocalPlayer.DisplayName,
-            m = msgText,
-            t = currentTime,
-            j = game.JobId,
-            p = targetUser or nil,
-            h = isHidden or nil
-        },
-        ["sync"] = currentTime
-    }
+    ["chat/" .. today .. "/" .. pushID] = {
+        u = LocalPlayer.Name,
+        d = LocalPlayer.DisplayName,
+        m = msgText,
+        t = currentTime
+    },
+
+    ["meta/" .. today .. "/" .. pushID] = {
+        j = game.JobId,
+        p = targetUser or nil,
+        h = isHidden or nil,
+        t = currentTime
+    },
+
+    ["sync"] = currentTime
+}
 
     task.spawn(function()
         apiReq("/.json", "PATCH", payload)
@@ -368,6 +373,22 @@ local function getRecentMessagePlayers()
     return users
 end
 
+local function getRecentMessageMeta()
+    local today = os.date("!%Y-%m-%d", os.time())
+
+    local data = apiReq(
+        "/meta/" .. today ..
+        ".json?orderBy=%22t%22&limitToLast=30",
+        "GET"
+    )
+
+    if not data or type(data) ~= "table" then
+        return {}
+    end
+
+    return data
+end
+
 -- Selection UI Modal
 local function openPlayerSelectUI(mode)
     mode = mode or "private"
@@ -563,7 +584,7 @@ task.spawn(function()
     while task.wait(350) do displayMessage("System", "\n1) !e = emojis\n2) !p = private chat \n3) !i = invite users \n4) !cmds = all commands") end
 end)
 task.spawn(function()
-    while task.wait(200) do displayMessage("System", "join DISCORD = 'VIP' title chat🌟") end
+    while task.wait(200) do displayMessage("dc bot", "join DISCORD = 'VIP' title chat🌟") end
 end)
 
 local messages = {  

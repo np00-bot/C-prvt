@@ -652,7 +652,7 @@ end
 
 -- main loop  ---
 local lastUpdate = 0
-local updateRate = 0.1
+local updateRate = 0.2
 
 local SetColor = Players.LocalPlayer.PlayerGui
     .NoResetGUIHandler.PropColorPicker.SetColor
@@ -689,10 +689,11 @@ RunService.Heartbeat:Connect(function()
     if c then
         SetColor:FireServer(c)
     end
-end)
+
 
     if activeMode == "None" then return end
     updatePropsCache()
+end)
 
     if #cachedProps == 0 then
         if tick() - lastStartTick > 3 then

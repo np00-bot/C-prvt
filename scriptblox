@@ -3,7 +3,7 @@ pcall(function()
 end)
 
 pcall(function()
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/Chat%20fire3'))()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/np00-bot/rawr/refs/heads/main/Chat%20fire4'))()
 end)
 
 

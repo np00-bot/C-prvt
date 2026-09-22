@@ -651,22 +651,45 @@ local function getRobotOffset(localIdx, globalToggle)
 end
 
 -- main loop  ---
-RunService.Heartbeat:Connect(function(dt)
-    if rgbMode ~= "OFF" and #cachedPartsForRGB > 0 then
-        local now, hueSpeed = tick(), 0.5 * dt
-        if rgbMode == "Dyna" then
-            local hue = (now * 0.2) % 1
-            local c = Color3.fromHSV(hue, 1, 1)
-            for i = 1, #cachedPartsForRGB do cachedPartsForRGB[i].Color = c end
-        elseif rgbMode == "Shift" then
-            local c = Color3.fromHSV((m_floor(now * 2) / 2) % 1, 1, 1)
-            for i = 1, #cachedPartsForRGB do cachedPartsForRGB[i].Color = c end
-        elseif rgbMode == "Disco" then
-            for i = 1, #cachedPartsForRGB do 
-                if m_floor(now * 10) % 3 == 0 then cachedPartsForRGB[i].Color = Color3.fromHSV(math.random(), 1, 1) end
-            end
-        end
+local lastUpdate = 0
+local updateRate = 0.1
+
+local SetColor = Players.LocalPlayer.PlayerGui
+    .NoResetGUIHandler.PropColorPicker.SetColor
+
+RunService.Heartbeat:Connect(function()
+    if rgbMode == "OFF" then
+        return
     end
+
+    local now = tick()
+
+    if now - lastUpdate < updateRate then
+        return
+    end
+
+    lastUpdate = now
+
+    local c
+
+    if rgbMode == "Dyna" then
+        c = Color3.fromHSV((now * 0.2) % 1, 1, 1)
+
+    elseif rgbMode == "Shift" then
+        c = Color3.fromHSV((math.floor(now * 2) / 2) % 1, 1, 1)
+
+    elseif rgbMode == "Disco" then
+        if math.floor(now * 10) % 3 ~= 0 then
+            return
+        end
+
+        c = Color3.fromHSV(math.random(), 1, 1)
+    end
+
+    if c then
+        SetColor:FireServer(c)
+    end
+end)
 
     if activeMode == "None" then return end
     updatePropsCache()

@@ -693,7 +693,7 @@ RunService.Heartbeat:Connect(function()
 
     if activeMode == "None" then return end
     updatePropsCache()
-end)
+
 
     if #cachedProps == 0 then
         if tick() - lastStartTick > 3 then

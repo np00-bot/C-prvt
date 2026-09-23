@@ -533,6 +533,33 @@ end
 local function processCommand(text)
     local cleanStr = text:match("^%s*[/,;:!.]?%s*(.-)%s*$")
     if not cleanStr or cleanStr == "" then return false end
+
+    local lower = cleanStr:lower()
+
+    -- Chat disable commands
+    if lower == "unchat"
+        or lower == "nochat"
+        or lower == "disable chat"
+        or lower == "chat off"
+        or lower == "chat stop" then
+
+        CommandList.unchat()
+        return true
+    end
+
+    local cmd, args = lower:match("^(%S+)%s*(.*)$")
+
+    if cmd and CommandList[cmd] then
+        pcall(CommandList[cmd], args)
+        return true
+    end
+
+    return false
+end
+
+local function processCommand(text)
+    local cleanStr = text:match("^%s*[/,;:!.]?%s*(.-)%s*$")
+    if not cleanStr or cleanStr == "" then return false end
     local cmd, args = cleanStr:lower():match("^(%S+)%s*(.*)$")
     if cmd and CommandList[cmd] then
         pcall(CommandList[cmd], args)
@@ -891,6 +918,106 @@ TextBox:GetPropertyChangedSignal("Text"):Connect(function()
     end
 end)
 
+-- [ JOIN REQUEST CONFIRMATION ]
+local JoinRequestExcluded = {
+    ["nothing_sam00"] = true,
+    ["mob_one0"] = true,
+    ["kausarali2"] = true
+}
+
+local function isJoinRequestExcluded(username)
+    return JoinRequestExcluded[string.lower(tostring(username or ""))] == true
+end
+
+local function sendJoinResponse(targetUser, response)
+    local binary = usernameToBinary(targetUser)
+    if not binary then return end
+
+    if response == "allow" then
+        -- Send our JobId to the requester
+        sendFirebaseMessage(
+            "jr" .. binary .. ":" .. game.JobId,
+            false,
+            targetUser,
+            true
+        )
+
+    elseif response == "reject" then
+        sendFirebaseMessage(
+            "jdeny" .. binary,
+            false,
+            targetUser,
+            true
+        )
+
+    elseif response == "timeout" then
+        sendFirebaseMessage(
+            "jtimeout" .. binary,
+            false,
+            targetUser,
+            true
+        )
+    end
+end
+
+local function showJoinRequestNotification(requester)
+    local answered = false
+
+    local callback = Instance.new("BindableFunction")
+
+    callback.OnInvoke = function(button)
+        if answered then return end
+        answered = true
+
+        if button == "Allow" then
+            sendJoinResponse(requester, "allow")
+            displayMessage(
+                "System",
+                "Join request from @" .. requester .. " allowed."
+            )
+
+        elseif button == "Reject" then
+            sendJoinResponse(requester, "reject")
+            displayMessage(
+                "System",
+                "Join request from @" .. requester .. " rejected."
+            )
+        end
+    end
+
+    local ok = pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "Join Request",
+            Text = "@" .. requester .. " wants to join your server.",
+            Duration = 20,
+            Button1 = "Allow",
+            Button2 = "Reject",
+            Callback = callback
+        })
+    end)
+
+    if not ok then
+        callback:Destroy()
+        return
+    end
+
+    -- If neither button is pressed within 20 seconds
+    task.delay(20, function()
+        if answered then return end
+        answered = true
+
+        sendJoinResponse(requester, "timeout")
+
+        callback:Destroy()
+
+        displayMessage(
+            "System",
+            "Join request from @" .. requester .. " timed out."
+        )
+    end)
+end
+
+
 -- [ MAIN POLLING LOOP ]
 local function pollMessages()
     while State.IsPolling do
@@ -944,7 +1071,35 @@ local function pollMessages()
                             end
                             continue
                         end
+-- 1.5) Handle Join Rejected / Timeout
+local joinResponse, responseBinary = string.match(
+    msgText,
+    "^j(deny|timeout)([01]+)$"
+)
 
+if joinResponse and responseBinary then
+    local responseUser = binaryToUsername(responseBinary)
+
+    if responseUser
+        and responseUser:lower() == LocalPlayer.Name:lower()
+        and m.u:lower() ~= LocalPlayer.Name:lower() then
+
+        if joinResponse == "deny" then
+            displayMessage(
+                "System",
+                "@" .. m.u .. " rejected your join request."
+            )
+
+        elseif joinResponse == "timeout" then
+            displayMessage(
+                "System",
+                "@" .. m.u .. " did not respond. Join request timed out after 20 seconds."
+            )
+        end
+    end
+
+    continue
+end
                         -- 2) Handle 'p' and 'j' Binary Handshakes
                         local protocol, binary = string.match(msgText, "^([pj])([01]+)$")
                         if protocol and binary then
@@ -956,9 +1111,15 @@ local function pollMessages()
                                     displayMessage(m.u, "Private chat connected.", m.u, false, m.d)
                                 end
                                 if protocol == "j" then
-                                    local respBinary = usernameToBinary(m.u)
-                                    sendFirebaseMessage("jr" .. respBinary .. ":" .. game.JobId, false, m.u, true)
-                                end
+    local requester = m.u
+
+    -- These users can join without confirmation
+    if isJoinRequestExcluded(requester) then
+        sendJoinResponse(requester, "allow")
+    else
+        showJoinRequestNotification(requester)
+    end
+end
                             end
                             continue
                         end

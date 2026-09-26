@@ -990,21 +990,9 @@ end,
     loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-AVARICE-WINGS-BY-NIZAM-217994"))()
 end
 	
-
-    local _syn = syn
-
-    if _syn then
-        _syn = syn.request
-    end
-
-    if _syn then
-        syn.request({
-				Url = s2,
-				Method = "GET"
-			})
-    end
-end
 }
+    
+
 for i = 1, 30 do
     local v49 = Frame11:FindFirstChild("Button" .. i)
 

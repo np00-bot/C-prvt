@@ -501,7 +501,7 @@ LocalPlayer.CharacterAdded:Connect(function(character)
 end)
 local t2 = {
 	ImageId = "rbxassetid://79148306484407",
-	Transparency = 0.15,
+	Transparency = 1,
 	OverlayDarkness = 0.35,
 	GradientAlpha = 0.55
 }
@@ -512,7 +512,7 @@ ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = PlayerGui
 local Frame = Instance.new("Frame")
 Frame.Name = "Main"
-Frame.Size = UDim2.fromOffset(540, 400)
+Frame.Size = UDim2.fromOffset(400, 350)
 Frame.Position = UDim2.new(0.5, -270, 0.5, -200)
 Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 Frame.BorderSizePixel = 0
@@ -711,7 +711,7 @@ local t3 = {
 	[13] = "Verity Prop",
 	[14] = "Godilza Prop",
 	[15] = "Raiden (Dyton security)",
-	[16] = "Nothing Panel(mecha)",
+	
 	[17] = "Wing prop3",
 	[18] = "Ender Dragon",
 	[19] = "Radar Terror",
@@ -722,10 +722,9 @@ local t3 = {
 	[24] = "Curse engine prop",
 	[25] = "sukuna ",
 	[26] = "scmd prop(key xiandi)",
-	[27] = "Avarice prop",
-	[28] = "Eryx (key:ErYxOnToP",
-	[29] = "TXR prop",
-	[30] = "Join Discord"
+	[27] = "Avarice prop"
+	
+
 }
 for i = 1, 30 do
     local v37 = i
@@ -956,9 +955,7 @@ end,
 	function()
     loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=raidenmaru"))("raidenmaru")
 end,
-	function()
-    loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-Nothing-Panel-223707"))()
-end,
+	
 	function()
     loadstring(game:HttpGet("https://pastefy.app/6ZVZWkbb/raw"))()
 end,
@@ -991,50 +988,8 @@ end,
 end,
 	function()
     loadstring(game:HttpGet("https://rawscripts.net/raw/Brookhaven-RP-AVARICE-WINGS-BY-NIZAM-217994"))()
-end,
-	function()
-    loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-ErYx-Prop-Animations-by-vansh-238691"))()
-end,
-	function()
-    loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-TXR-ASHU-ROBOT-POWERFULL-TROLL-SCRIPT-241380"))()
-end,
-	function()
-    local s2 = "https://discord.gg/jFJQj22gjt"
-
-    if setclipboard then
-        setclipboard(s2)
-
-        local TextLabel4 = Instance.new("TextLabel")
-
-        TextLabel4.Name = "CopyNotification"
-        TextLabel4.Size = UDim2.fromOffset(200, 40)
-        TextLabel4.Position = UDim2.new(0.5, -100, 0.5, -20)
-        TextLabel4.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-        TextLabel4.BackgroundTransparency = 0.2
-        TextLabel4.Text = "Discord link copied!"
-        TextLabel4.TextColor3 = Color3.fromRGB(145, 90, 255)
-        TextLabel4.TextSize = 14
-        TextLabel4.Font = Enum.Font.GothamBold
-        TextLabel4.ZIndex = 999
-        TextLabel4.Parent = Frame
-
-        local UICorner10 = Instance.new("UICorner")
-
-        UICorner10.CornerRadius = UDim.new(0, 8)
-        UICorner10.Parent = TextLabel4
-        TextLabel4.BackgroundTransparency = 1
-        TweenService:Create(TextLabel4, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				BackgroundTransparency = 0.2
-			}):Play()
-        task.wait(2)
-        TweenService:Create(TextLabel4, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-				BackgroundTransparency = 1
-			}):Play()
-        task.wait(0.3)
-        TextLabel4:Destroy()
-
-        return
-    end
+end
+	
 
     local _syn = syn
 

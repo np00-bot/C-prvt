@@ -1,3 +1,9 @@
+
+
+
+
+-- code to trigger infinite yield 
+--[[
 local Players = game:GetService("Players")
 
 -- 1. Ensure Infinite Yield is loaded
@@ -34,6 +40,35 @@ for _, command in ipairs(commands) do
         Players.LocalPlayer:Chat(command)
     end
 end
+]]
+
+
+
+
+
+
+
+
+
+
+
+local Players = game:GetService("Players")
+local Stats = game:GetService("Stats")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+--------------------------------------------------
+-- SETTINGS
+--------------------------------------------------
+
+local PING_THRESHOLD = 200       -- ms
+local FPS_THRESHOLD = 25         -- FPS
+local REQUIRED_BAD_CHECKS = 3
+local CHECK_INTERVAL = 2
+
+
+
 
 local function runAntiLag()
 	local Terrain = workspace:FindFirstChildOfClass('Terrain')
@@ -72,5 +107,171 @@ local function runAntiLag()
 	end
 end
 
-runAntiLag()
+
+-- UI
+--------------------------------------------------
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "LagDetector"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.fromOffset(310, 140)
+frame.Position = UDim2.new(0.5, -155, 0.8, 0)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Visible = false
+frame.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
+
+local text = Instance.new("TextLabel")
+text.Size = UDim2.new(1, -20, 0, 50)
+text.Position = UDim2.fromOffset(10, 8)
+text.BackgroundTransparency = 1
+text.Text = "Are you lagging?"
+text.TextColor3 = Color3.new(1, 1, 1)
+text.TextSize = 20
+text.Font = Enum.Font.GothamBold
+text.Parent = frame
+
+local reduceButton = Instance.new("TextButton")
+reduceButton.Size = UDim2.fromOffset(130, 42)
+reduceButton.Position = UDim2.fromOffset(15, 78)
+reduceButton.Text = "Reduce lag"
+reduceButton.TextSize = 16
+reduceButton.Font = Enum.Font.Gotham
+reduceButton.TextColor3 = Color3.new(1, 1, 1)
+reduceButton.BackgroundColor3 = Color3.fromRGB(50, 150, 80)
+reduceButton.Parent = frame
+
+local noButton = Instance.new("TextButton")
+noButton.Size = UDim2.fromOffset(130, 42)
+noButton.Position = UDim2.fromOffset(165, 78)
+noButton.Text = "No"
+noButton.TextSize = 16
+noButton.Font = Enum.Font.Gotham
+noButton.TextColor3 = Color3.new(1, 1, 1)
+noButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+noButton.Parent = frame
+
+for _, button in ipairs({reduceButton, noButton}) do
+	local buttonCorner = Instance.new("UICorner")
+	buttonCorner.CornerRadius = UDim.new(0, 8)
+	buttonCorner.Parent = button
+end
+
+--------------------------------------------------
+-- FPS TRACKING
+--------------------------------------------------
+
+local currentFPS = 60
+local frameCount = 0
+local fpsTimer = 0
+
+RunService.RenderStepped:Connect(function(deltaTime)
+	frameCount += 1
+	fpsTimer += deltaTime
+
+	if fpsTimer >= 1 then
+		currentFPS = frameCount / fpsTimer
+		frameCount = 0
+		fpsTimer = 0
+	end
+end)
+
+--------------------------------------------------
+-- DETECTOR
+--------------------------------------------------
+
+local detectorRunning = true
+local asking = false
+local badChecks = 0
+
+local function stopDetector()
+	detectorRunning = false
+	asking = false
+	frame.Visible = false
+end
+
+local function showLagPrompt()
+	if asking or not detectorRunning then
+		return
+	end
+
+	asking = true
+	frame.Visible = true
+
+	text.Text = string.format(
+		"Are you lagging?\nPing: %dms | FPS: %d",
+		math.round(currentPing or 0),
+		math.round(currentFPS)
+	)
+end
+
+--------------------------------------------------
+-- BUTTONS
+--------------------------------------------------
+
+reduceButton.Activated:Connect(function()
+	if not detectorRunning then
+		return
+	end
+
+	frame.Visible = false
+	asking = false
+
+	runAntiLag()
+
+	-- Stop checking after anti-lag is enabled
+	stopDetector()
+end)
+
+noButton.Activated:Connect(function()
+	-- User doesn't want anti-lag.
+	-- Stop the detector completely.
+	stopDetector()
+end)
+
+--------------------------------------------------
+-- MAIN LOOP
+--------------------------------------------------
+
+local currentPing = 0
+
+task.spawn(function()
+	while detectorRunning do
+		task.wait(CHECK_INTERVAL)
+
+		if not detectorRunning or asking then
+			continue
+		end
+
+		local success, ping = pcall(function()
+			return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+		end)
+
+		if success and ping then
+			currentPing = ping
+
+			local highPing = ping >= PING_THRESHOLD
+			local lowFPS = currentFPS <= FPS_THRESHOLD
+
+			if highPing or lowFPS then
+				badChecks += 1
+			else
+				badChecks = 0
+			end
+
+			-- Require 3 consecutive bad checks
+			-- to avoid triggering from a brief spike.
+			if badChecks >= REQUIRED_BAD_CHECKS then
+				showLagPrompt()
+			end
+		end
+	end
+end)
 

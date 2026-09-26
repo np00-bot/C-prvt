@@ -679,22 +679,30 @@ ScreenGui:GetPropertyChangedSignal("Enabled"):Connect(function()
 
     TextButton2.Visible = false
 end)
-local Frame11 = Instance.new("Frame")
+local Frame11 = Instance.new("ScrollingFrame")
 Frame11.Name = "Buttons"
 Frame11.Size = UDim2.new(1, -24, 1, -64)
 Frame11.Position = UDim2.fromOffset(12, 58)
 Frame11.BackgroundTransparency = 1
+Frame11.BorderSizePixel = 0
+Frame11.ScrollBarThickness = 5
+Frame11.ScrollBarImageTransparency = 0.2
+Frame11.ScrollingDirection = Enum.ScrollingDirection.Y
+Frame11.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Frame11.CanvasSize = UDim2.new(0, 0, 0, 0)
 Frame11.Parent = Frame
+
 local UIGridLayout = Instance.new("UIGridLayout")
 UIGridLayout.Name = "Grid"
-UIGridLayout.CellSize = UDim2.new(0.2, -7, 0, 48)
+UIGridLayout.CellSize = UDim2.new(1/3, -5, 0, 48)
 UIGridLayout.CellPadding = UDim2.fromOffset(7, 7)
 UIGridLayout.FillDirection = Enum.FillDirection.Horizontal
-UIGridLayout.FillDirectionMaxCells = 5
+UIGridLayout.FillDirectionMaxCells = 3
 UIGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 UIGridLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 UIGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIGridLayout.Parent = Frame11
+
 local t3 = {
 	[1] = "Wing Prop2",
 	[2] = "Wing Prop",
@@ -872,41 +880,21 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 Frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        local inputPosition = input.Position
-        local v113 = false
+    if input.UserInputType ~= Enum.UserInputType.Touch then
+        return
+    end
 
-        for _, child in pairs(Frame11:GetChildren()) do
-            if not child:IsA("TextButton") then
-                continue
-            end
+    local inputPosition = input.Position
 
-            local AbsolutePosition = child.AbsolutePosition
-            local AbsoluteSize = child.AbsoluteSize
-            local v118 = inputPosition.X >= AbsolutePosition.X
+    local insideButtons = (
+        inputPosition.X >= Frame11.AbsolutePosition.X
+        and inputPosition.X <= Frame11.AbsolutePosition.X + Frame11.AbsoluteSize.X
+        and inputPosition.Y >= Frame11.AbsolutePosition.Y
+        and inputPosition.Y <= Frame11.AbsolutePosition.Y + Frame11.AbsoluteSize.Y
+    )
 
-            if v118 then
-                v118 = inputPosition.X <= AbsolutePosition.X + AbsoluteSize.X
-
-                if v118 then
-                    v118 = inputPosition.Y >= AbsolutePosition.Y
-
-                    if v118 then
-                        v118 = inputPosition.Y <= AbsolutePosition.Y + AbsoluteSize.Y
-                    end
-                end
-            end
-
-            if v118 then
-                v113 = true
-
-                break
-            end
-        end
-
-        if not v113 then
-            v46(input)
-        end
+    if not insideButtons then
+        v46(input)
     end
 end)
 local t4 = {

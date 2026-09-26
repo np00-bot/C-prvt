@@ -270,20 +270,6 @@ local function stopDetector()
 	frame.Visible = false
 end
 
-local function showLagPrompt()
-	if asking or not detectorRunning then
-		return
-	end
-
-	asking = true
-	frame.Visible = true
-
-	text.Text = string.format(
-		"Are you lagging?\nPing: %dms | FPS: %d",
-		math.round(currentPing or 0),
-		math.round(currentFPS)
-	)
-end
 
 --------------------------------------------------
 -- BUTTONS

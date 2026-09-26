@@ -19,9 +19,9 @@ end
 -- 2. Define the list of commands to run automatically
 local commands = {
     ";antilag",
-    ";nosit",
-    ";noclip",
-    ";nofog"
+    
+    ";noclip"
+    
 }
 
 -- 3. Loop through and execute commands silently

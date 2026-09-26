@@ -1,0 +1,36 @@
+local Players = game:GetService("Players")
+
+-- 1. Ensure Infinite Yield is loaded
+if not getgenv().IY_LOADED then
+    if isfile and isfile("Infinite yield code.txt") then
+        local iySource = readfile("Infinite yield code.txt")
+        local executeIY = loadstring(iySource)
+        if executeIY then 
+            executeIY() 
+            -- Wait briefly to ensure IY establishes its Chatted event connections
+            task.wait(10) 
+        end
+    else
+        warn("Could not find 'Infinite yield code.txt'")
+        return
+    end
+end
+
+-- 2. Define the list of commands to run automatically
+local commands = {
+    ";antilag",
+    ";nosit",
+    ";noclip",
+    ";nofog"
+}
+
+-- 3. Loop through and execute commands silently
+for _, command in ipairs(commands) do
+    if firesignal then
+        -- Fires the local event without networking it to the server
+        firesignal(Players.LocalPlayer.Chatted, command)
+    else
+        -- Fallback method for executors lacking firesignal
+        Players.LocalPlayer:Chat(command)
+    end
+end

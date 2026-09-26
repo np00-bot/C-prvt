@@ -107,6 +107,58 @@ local function runAntiLag()
 	end
 end
 
+local function getSolidColor(color)
+	local r, g, b = color.R, color.G, color.B
+
+	-- White / near-white
+	if r > 0.85 and g > 0.85 and b > 0.85 then
+		return Color3.fromRGB(255, 255, 255)
+	end
+
+	-- Black / very dark
+	if r < 0.18 and g < 0.18 and b < 0.18 then
+		return Color3.fromRGB(0, 0, 0)
+	end
+
+	-- Find strongest RGB channel
+	local maxValue = math.max(r, g, b)
+
+	-- Red
+	if maxValue == r then
+		if g > 0.55 and b > 0.55 then
+			-- Pink / magenta
+			return Color3.fromRGB(255, 0, 255)
+		elseif g > 0.35 then
+			-- Orange / yellow-ish
+			return Color3.fromRGB(255, 165, 0)
+		else
+			return Color3.fromRGB(255, 0, 0)
+		end
+
+	-- Green
+	elseif maxValue == g then
+		if r > 0.55 and b < 0.45 then
+			-- Yellow
+			return Color3.fromRGB(255, 255, 0)
+		elseif b > 0.45 then
+			-- Cyan
+			return Color3.fromRGB(0, 255, 255)
+		else
+			return Color3.fromRGB(0, 255, 0)
+		end
+
+	-- Blue
+	else
+		if r > 0.45 then
+			-- Purple
+			return Color3.fromRGB(128, 0, 255)
+		else
+			return Color3.fromRGB(0, 0, 255)
+		end
+	end
+end
+
+
 
 -- UI
 --------------------------------------------------

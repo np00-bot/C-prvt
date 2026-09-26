@@ -459,6 +459,7 @@ local manualDupBtn = createMainBtn("📋 Auto-Duplicate", Color3.fromRGB(60, 120
 
 local orbitToggleBtn = createMainBtn("🪐 Mode: ORBIT PATTERN", Colors.Primary, Color3.new(0,0,0))
 local robotToggleBtn = createMainBtn("🤖 Mode: ROBOT TROLL", Colors.Surface)
+local slideToggleBtn = createMainBtn("🛝 Mode: SLIDE TROLL", Colors.Surface)
 local bedToggleBtn = createMainBtn("🛏️ Mode: CHAIR TROLL", Colors.Surface)
 
 local function updateModeUI()
@@ -466,12 +467,15 @@ local function updateModeUI()
     orbitToggleBtn.TextColor3 = (targetMode == "Orbit") and Color3.new(0,0,0) or Colors.Text
     robotToggleBtn.BackgroundColor3 = (targetMode == "Robot") and Colors.Warning or Colors.Surface
     robotToggleBtn.TextColor3 = (targetMode == "Robot") and Color3.new(0,0,0) or Colors.Text
+slideToggleBtn.BackgroundColor3 = (targetMode == "Slide") and Colors.Purple or Colors.Surface
+    slideToggleBtn.TextColor3 = (targetMode == "Slide") and Color3.new(1,1,1) or Colors.Text
     bedToggleBtn.BackgroundColor3 = (targetMode == "Chair") and Colors.Purple or Colors.Surface
     bedToggleBtn.TextColor3 = (targetMode == "Chair") and Color3.new(1,1,1) or Colors.Text
 end
 
 orbitToggleBtn.MouseButton1Click:Connect(function() targetMode = "Orbit"; updateModeUI() end)
 robotToggleBtn.MouseButton1Click:Connect(function() targetMode = "Robot"; updateModeUI(); clearProps(); spawnProp("ScreensRobotBig", "Screens") end)
+slideToggleBtn.MouseButton1Click:Connect(function() targetMode = "Slide"; updateModeUI(); clearProps(); spawnProp("Summer2026SlipAndSlide", "Carnival") end)
 bedToggleBtn.MouseButton1Click:Connect(function() targetMode = "Chair"; updateModeUI(); clearProps(); spawnProp("FurnitureBleachers", "Furniture") end)
 
 local rgbLabel = Instance.new("TextLabel", mainList)
@@ -681,8 +685,8 @@ end
     if (now - lastNetworkUpdate) >= NETWORK_RATE then lastNetworkUpdate = now; doNetworkUpdate = true end
 
     -- lock
-    if activeMode == "Robot" or activeMode == "Chair" then
-        if not lockedProp or not lockedProp.Parent then lockedProp = cachedProps[1].prop end
+    if activeMode == "Robot" or activeMode == "Slide" or activeMode == "Chair" then
+if not lockedProp or not lockedProp.Parent then lockedProp = cachedProps[1].prop end
         if lockedProp and lockedProp.Parent then
             pcall(function() lockedProp:PivotTo(CFrame.new(LOCKED_PROP_POSITION)) end)
             -- duppp
@@ -721,7 +725,8 @@ end
             if doNetworkUpdate then task.spawn(function() pcall(function() item.remote:InvokeServer(calcCFrame) end) end) end
         end
 
-    elseif activeMode == "Robot" then
+    elseif activeMode == "Robot" or activeMode == "Slide" then
+        if (now - lastRobotTick) >= ROBOT_RATE then
         if (now - lastRobotTick) >= ROBOT_RATE then
             lastRobotTick, robotSwitchToggle = now, not robotSwitchToggle
             for tIdx, plr in ipairs(targetList) do

@@ -62,8 +62,8 @@ local player = Players.LocalPlayer
 -- SETTINGS
 --------------------------------------------------
 
-local PING_THRESHOLD = 200       -- ms
-local FPS_THRESHOLD = 25         -- FPS
+local PING_THRESHOLD = 300       -- ms
+local FPS_THRESHOLD = 15        -- FPS
 local REQUIRED_BAD_CHECKS = 3
 local CHECK_INTERVAL = 2
 
@@ -111,14 +111,23 @@ end
 -- UI
 --------------------------------------------------
 
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+-- ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "LagDetector"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
+-- Main Frame
 local frame = Instance.new("Frame")
+frame.Name = "MainFrame"
 frame.Size = UDim2.fromOffset(310, 140)
-frame.Position = UDim2.new(0.5, -155, 0.8, 0)
+frame.Position = UDim2.fromScale(0.5, 0.5)
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
 frame.Visible = false
@@ -128,7 +137,9 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 10)
 corner.Parent = frame
 
+-- Text
 local text = Instance.new("TextLabel")
+text.Name = "Question"
 text.Size = UDim2.new(1, -20, 0, 50)
 text.Position = UDim2.fromOffset(10, 8)
 text.BackgroundTransparency = 1
@@ -138,7 +149,9 @@ text.TextSize = 20
 text.Font = Enum.Font.GothamBold
 text.Parent = frame
 
+-- Reduce Lag Button
 local reduceButton = Instance.new("TextButton")
+reduceButton.Name = "ReduceLag"
 reduceButton.Size = UDim2.fromOffset(130, 42)
 reduceButton.Position = UDim2.fromOffset(15, 78)
 reduceButton.Text = "Reduce lag"
@@ -146,9 +159,16 @@ reduceButton.TextSize = 16
 reduceButton.Font = Enum.Font.Gotham
 reduceButton.TextColor3 = Color3.new(1, 1, 1)
 reduceButton.BackgroundColor3 = Color3.fromRGB(50, 150, 80)
+reduceButton.BorderSizePixel = 0
 reduceButton.Parent = frame
 
+local reduceCorner = Instance.new("UICorner")
+reduceCorner.CornerRadius = UDim.new(0, 8)
+reduceCorner.Parent = reduceButton
+
+-- No Button
 local noButton = Instance.new("TextButton")
+noButton.Name = "No"
 noButton.Size = UDim2.fromOffset(130, 42)
 noButton.Position = UDim2.fromOffset(165, 78)
 noButton.Text = "No"
@@ -156,13 +176,66 @@ noButton.TextSize = 16
 noButton.Font = Enum.Font.Gotham
 noButton.TextColor3 = Color3.new(1, 1, 1)
 noButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+noButton.BorderSizePixel = 0
 noButton.Parent = frame
 
-for _, button in ipairs({reduceButton, noButton}) do
-	local buttonCorner = Instance.new("UICorner")
-	buttonCorner.CornerRadius = UDim.new(0, 8)
-	buttonCorner.Parent = button
-end
+local noCorner = Instance.new("UICorner")
+noCorner.CornerRadius = UDim.new(0, 8)
+noCorner.Parent = noButton
+
+
+local dragging = false
+local dragStart
+local startPos
+
+frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if not dragging then
+		return
+	end
+
+	if input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch then
+
+		local delta = input.Position - dragStart
+
+		frame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+
+reduceButton.Activated:Connect(function()
+	frame.Visible = false
+
+	-- Put your lag-reduction code here
+end)
+
+noButton.Activated:Connect(function()
+	frame.Visible = false
+end)
+
+
+frame.Visible = true
 
 --------------------------------------------------
 -- FPS TRACKING
